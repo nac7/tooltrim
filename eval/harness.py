@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Sequence
 
 from tooltrim import ToolCompressor, count_tokens, using_exact_counts
 
@@ -73,6 +73,66 @@ def evaluate(model: QAModel, *, cases: Sequence[Case] | None = None,
     full = _full_pass(cases, model)
     results = [_budget_pass(cases, model, b, full.accuracy) for b in budgets]
     return full, results
+
+
+@dataclass
+class CaseRecord:
+    """Per-case detail for auditability / a paper appendix."""
+
+    id: str
+    content_type: str
+    question: str
+    gold: str
+    full_correct: bool
+    full_tokens: int
+    full_answer: str
+    per_budget: Dict[int, Dict[str, Any]] = field(default_factory=dict)
+
+
+def evaluate_detailed(model: QAModel, *, cases: Sequence[Case] | None = None,
+                      budgets: Sequence[int] = (128, 256, 400, 800)):
+    """Like evaluate(), but also returns per-case records (full + per-budget).
+
+    Aggregate math is identical to evaluate(); use this when persisting a run.
+    """
+    cases = list(cases) if cases is not None else default_cases()
+    n = len(cases)
+
+    records: List[CaseRecord] = []
+    full_correct = 0
+    full_tokens = 0
+    for c in cases:
+        ans = model.answer(c.question, c.tool_output)
+        tok = count_tokens(c.tool_output)
+        ok = matches(ans, c.gold)
+        full_correct += int(ok)
+        full_tokens += tok
+        records.append(CaseRecord(c.id, c.content_type, c.question, c.gold,
+                                  ok, tok, ans))
+    full = FullResult(full_correct / n if n else 0.0, full_correct, n,
+                      full_tokens / n if n else 0.0)
+
+    by_id = {r.id: r for r in records}
+    results: List[BudgetResult] = []
+    for b in budgets:
+        tc = ToolCompressor(max_tokens=b, add_footer=False)
+        correct = 0
+        tokens = 0
+        for c in cases:
+            res = tc.compress(c.tool_output, query=c.question)
+            ans = model.answer(c.question, res.text)
+            ok = matches(ans, c.gold)
+            correct += int(ok)
+            tokens += res.compressed_tokens
+            by_id[c.id].per_budget[b] = {
+                "correct": ok, "tokens": res.compressed_tokens, "answer": ans}
+        acc = correct / n if n else 0.0
+        results.append(BudgetResult(
+            budget=b, avg_tokens=tokens / n if n else 0.0,
+            saved_ratio=1 - (tokens / (full_tokens or 1)),
+            accuracy=acc, correct=correct, n=n,
+            retention=(acc / full.accuracy) if full.accuracy else 0.0))
+    return full, results, records
 
 
 def format_report(model_name: str, full: FullResult,
