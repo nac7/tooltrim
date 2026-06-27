@@ -1,0 +1,534 @@
+{
+  "tool": "tooltrim",
+  "tooltrim_version": "0.1.0",
+  "run_utc": "2026-06-27T23:23:18.489432+00:00",
+  "git_commit": "2986765c947cc7cba3d4aa08201088619523621d",
+  "git_dirty": false,
+  "python": "3.13.5",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "exact_tiktoken": true,
+  "note": "Local Ollama, 8B; small-n (16) pilot. Compression more than doubles accuracy vs full context on this small model.",
+  "model": {
+    "name": "llama3.1:8b",
+    "provider": "ollama",
+    "model_id": "llama3.1:8b"
+  },
+  "dataset": {
+    "n": 16,
+    "types": {
+      "text": 3,
+      "html": 3,
+      "json": 3,
+      "logs": 3,
+      "tabular": 4
+    },
+    "case_ids": [
+      "text-ratelimit",
+      "text-deploykey",
+      "text-port",
+      "html-capital",
+      "html-ceo",
+      "html-version",
+      "json-refund",
+      "json-fraud",
+      "json-chargeback",
+      "logs-disk",
+      "logs-oom",
+      "logs-cert",
+      "csv-compliance",
+      "csv-vip",
+      "csv-refund",
+      "csv-duplicate"
+    ]
+  },
+  "budgets": [
+    128,
+    256,
+    400
+  ],
+  "full": {
+    "accuracy": 0.375,
+    "correct": 6,
+    "n": 16,
+    "avg_tokens": 6671.25
+  },
+  "budget_results": [
+    {
+      "budget": 128,
+      "avg_tokens": 75.5,
+      "saved_ratio": 0.9886827805883455,
+      "accuracy": 0.875,
+      "correct": 14,
+      "n": 16,
+      "retention": 2.3333333333333335
+    },
+    {
+      "budget": 256,
+      "avg_tokens": 156.8125,
+      "saved_ratio": 0.9764942851789394,
+      "accuracy": 0.75,
+      "correct": 12,
+      "n": 16,
+      "retention": 2.0
+    },
+    {
+      "budget": 400,
+      "avg_tokens": 213.75,
+      "saved_ratio": 0.9679595278246206,
+      "accuracy": 0.75,
+      "correct": 12,
+      "n": 16,
+      "retention": 2.0
+    }
+  ],
+  "cases": [
+    {
+      "id": "text-ratelimit",
+      "content_type": "text",
+      "question": "What is the API rate limit per hour?",
+      "gold": "5000 requests per hour",
+      "full": {
+        "correct": true,
+        "tokens": 4072,
+        "answer": "The API rate limit is 5000 requests per hour per key."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "5000 requests per hour"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "5000 requests per hour"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "5000 requests per hour"
+        }
+      }
+    },
+    {
+      "id": "text-deploykey",
+      "content_type": "text",
+      "question": "How often does the deployment key rotate?",
+      "gold": "every 24 hours",
+      "full": {
+        "correct": true,
+        "tokens": 4069,
+        "answer": "The deployment key rotates automatically every 24 hours."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "every 24 hours"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "every 24 hours"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "every 24 hours"
+        }
+      }
+    },
+    {
+      "id": "text-port",
+      "content_type": "text",
+      "question": "Which port does the metrics exporter listen on?",
+      "gold": "port 9187",
+      "full": {
+        "correct": true,
+        "tokens": 4060,
+        "answer": "\"Not specified in the output, but the default port for the metrics exporter is given as 9187\""
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 13,
+          "answer": "9187"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 13,
+          "answer": "9187"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 13,
+          "answer": "9187"
+        }
+      }
+    },
+    {
+      "id": "html-capital",
+      "content_type": "html",
+      "question": "What is the capital of the Republic of Auren?",
+      "gold": "Mateldorf",
+      "full": {
+        "correct": true,
+        "tokens": 2813,
+        "answer": "Mateldorf."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Mateldorf"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Mateldorf"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Mateldorf"
+        }
+      }
+    },
+    {
+      "id": "html-ceo",
+      "content_type": "html",
+      "question": "Who is Acme Corp's chief executive officer?",
+      "gold": "Dana Whitlock",
+      "full": {
+        "correct": true,
+        "tokens": 2812,
+        "answer": "Acme Corp's chief executive officer is Dana Whitlock."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Dana Whitlock"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Dana Whitlock"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "Dana Whitlock"
+        }
+      }
+    },
+    {
+      "id": "html-version",
+      "content_type": "html",
+      "question": "What is the current stable release version?",
+      "gold": "12.4.1",
+      "full": {
+        "correct": true,
+        "tokens": 2812,
+        "answer": "12.4.1"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "12.4.1"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "12.4.1"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "12.4.1"
+        }
+      }
+    },
+    {
+      "id": "json-refund",
+      "content_type": "json",
+      "question": "Which note mentions a refund issued to a customer?",
+      "gold": "refund issued to customer 4417",
+      "full": {
+        "correct": false,
+        "tokens": 10546,
+        "answer": "This is a large JSON array of objects, each representing a transaction or event with fields for `id`, `status` (e.g., `failed`, `pending`, or `ok`), and possibly others. The length of the array is 299."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 99,
+          "answer": "refund issued to customer 4417 for amount 250."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 235,
+          "answer": "\"A refund issued to customer 4417 for amount 250\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 235,
+          "answer": "\"A refund issued to customer 4417 for amount 250\""
+        }
+      }
+    },
+    {
+      "id": "json-fraud",
+      "content_type": "json",
+      "question": "Which note was flagged for manual fraud review?",
+      "gold": "flagged for manual fraud review",
+      "full": {
+        "correct": false,
+        "tokens": 10546,
+        "answer": "There are 1,000 items in the list."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 99,
+          "answer": "\"Downstream account order downstream handler metric latency shard.\" note, flagged for manual fraud review was id 211 with \"flagged for manual fraud review by analyst kim\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 237,
+          "answer": "\"flagged for manual fraud review by analyst kim\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 237,
+          "answer": "\"flagged for manual fraud review by analyst kim\""
+        }
+      }
+    },
+    {
+      "id": "json-chargeback",
+      "content_type": "json",
+      "question": "Which note mentions a chargeback dispute reason code?",
+      "gold": "chargeback disputed under reason code 4853",
+      "full": {
+        "correct": false,
+        "tokens": 10542,
+        "answer": "It appears to be a JSON array of objects containing ID and status (in the form \"ID/status\"). I'd need more context or a question about this data for a concise answer."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": "chargeback disputed under reason code 4853"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 232,
+          "answer": "\"reason code 4853\""
+        },
+        "400": {
+          "correct": false,
+          "tokens": 232,
+          "answer": "\"reason code 4853\""
+        }
+      }
+    },
+    {
+      "id": "logs-disk",
+      "content_type": "logs",
+      "question": "What error mentions disk usage on /var/data?",
+      "gold": "disk usage 98 percent on /var/data",
+      "full": {
+        "correct": false,
+        "tokens": 7605,
+        "answer": "The system is experiencing frequent heartbeats (INFO logs) every minute, but there's a single ERROR log at 10:42:54 that disk space is low."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 123,
+          "answer": "96% (not the case, actually) ... 98 percent \n\nExplanation. The exact relevant value is '98 percent'."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 256,
+          "answer": "98 percent"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 389,
+          "answer": "98"
+        }
+      }
+    },
+    {
+      "id": "logs-oom",
+      "content_type": "logs",
+      "question": "What error mentions an out of memory condition?",
+      "gold": "out of memory killing process pid 8123",
+      "full": {
+        "correct": false,
+        "tokens": 7603,
+        "answer": "The system appears to be operating within normal parameters, with only one exception where it encountered a memory issue (\"2026-06-27 10:42:54 ERROR: MEMORY_ISSUE\"). There is also a notable lack of any non-standard error messages."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 121,
+          "answer": "out of memory killing process pid 8123"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 254,
+          "answer": "not found"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 387,
+          "answer": "\" Out of memory \""
+        }
+      }
+    },
+    {
+      "id": "logs-cert",
+      "content_type": "logs",
+      "question": "What error mentions an expired tls certificate?",
+      "gold": "tls certificate expired for host api.example.com",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": "The system has been sending heartbeat messages at regular intervals, but there is a notable exception where the message \"ERROR** 2022-07-27 10:42:54 INFO\" was logged due to an unspecified reason."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 120,
+          "answer": "tls certificate expired for host api.example.com"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 253,
+          "answer": "\"tls certificate expired for host api.example.com\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 386,
+          "answer": "tls certificate expired for host api.example.com"
+        }
+      }
+    },
+    {
+      "id": "csv-compliance",
+      "content_type": "tabular",
+      "question": "Which note was flagged for compliance review?",
+      "gold": "flagged for compliance review under sanctions list",
+      "full": {
+        "correct": false,
+        "tokens": 7925,
+        "answer": "It appears to be a large list of API calls or system events with various keys and values, possibly generated by an analytics package or monitoring tool. If you'd like me to help extract specific information from this dataset, please provide more context or specify which aspects you're interested in!"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": "'flagged for compliance review under sanctions list'"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 242,
+          "answer": "flagged for compliance review under sanctions list"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 368,
+          "answer": "flagged for compliance review under sanctions list"
+        }
+      }
+    },
+    {
+      "id": "csv-vip",
+      "content_type": "tabular",
+      "question": "Which note mentions a vip customer requiring priority handling?",
+      "gold": "vip customer requires priority handling",
+      "full": {
+        "correct": false,
+        "tokens": 7905,
+        "answer": "It appears to be a list of 499 system monitor or error reporting entries with cryptic codes and possibly related to technical issues in a distributed system. Without further context, it's difficult for me to provide a meaningful concise answer. Can you provide more information about its origin and intended use? I can try to deduce any patterns or insights from the data if needed!"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 116,
+          "answer": "vip customer requires priority handling tier gold"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": "vip customer requires priority handling tier gold."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 377,
+          "answer": "\"vip customer requires priority handling tier gold.\" (note #333) is the mention where a vip customer requiring priority handling is noted but  the actual value of note mentioned as \"vip customer requires priority handling tier\" has no specific numeric value."
+        }
+      }
+    },
+    {
+      "id": "csv-refund",
+      "content_type": "tabular",
+      "question": "Which note mentions a partial refund approval?",
+      "gold": "partial refund approved by supervisor delgado",
+      "full": {
+        "correct": false,
+        "tokens": 7938,
+        "answer": "This appears to be a large dataset of customer transactions or events from an e-commerce platform. Is there anything specific you'd like me to extract or analyze from this data?"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 117,
+          "answer": "partial refund approved by supervisor delgado"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 241,
+          "answer": "partial refund approved by supervisor delgado"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 366,
+          "answer": "\"partial refund approved by supervisor delgado\""
+        }
+      }
+    },
+    {
+      "id": "csv-duplicate",
+      "content_type": "tabular",
+      "question": "Which note mentions a duplicate transaction?",
+      "gold": "duplicate transaction detected and voided",
+      "full": {
+        "correct": false,
+        "tokens": 7890,
+        "answer": "Based on the provided output, it appears to be a large table or list of items without any clear structure or categorization. Without more context or a specific question to answer, I'll provide a concise statement:\n\nThe output is a lengthy, alphabetical sequence (from 1-499) detailing a variety of terms related to IT or business operations."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 118,
+          "answer": "duplicate transaction detected and voided automatically"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 242,
+          "answer": "duplicate transaction detected and voided automatically"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 364,
+          "answer": "duplicate transaction detected and voided automatically"
+        }
+      }
+    }
+  ]
+}

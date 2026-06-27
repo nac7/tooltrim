@@ -1,0 +1,4 @@
+model,budget,comp_tokens,saved_ratio,accuracy,retention,full_accuracy,full_avg_tokens,n
+llama3.1:8b,128,75.5,0.9887,0.8750,2.3333,0.3750,6671.2,16
+llama3.1:8b,256,156.8,0.9765,0.7500,2.0000,0.3750,6671.2,16
+llama3.1:8b,400,213.8,0.9680,0.7500,2.0000,0.3750,6671.2,16
