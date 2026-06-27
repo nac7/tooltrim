@@ -1,44 +1,78 @@
 {
   "tool": "tooltrim",
   "tooltrim_version": "0.1.0",
-  "run_utc": "2026-06-27T23:23:18.489432+00:00",
-  "git_commit": "2986765c947cc7cba3d4aa08201088619523621d",
+  "run_utc": "2026-06-27T23:35:56.935462+00:00",
+  "git_commit": "a190bbe2c39240f763e18c1b476b36481ce389f9",
   "git_dirty": false,
   "python": "3.13.5",
   "platform": "Windows-11-10.0.26200-SP0",
   "exact_tiktoken": true,
-  "note": "Local Ollama, 8B; small-n (16) pilot. Compression more than doubles accuracy vs full context on this small model.",
+  "note": "Local Ollama, 8B; 50-case dataset; Wilson 95% CIs. Compression vs full-context on a small model.",
   "model": {
     "name": "llama3.1:8b",
     "provider": "ollama",
     "model_id": "llama3.1:8b"
   },
   "dataset": {
-    "n": 16,
+    "n": 50,
     "types": {
-      "text": 3,
-      "html": 3,
-      "json": 3,
-      "logs": 3,
-      "tabular": 4
+      "text": 10,
+      "html": 10,
+      "json": 10,
+      "logs": 10,
+      "tabular": 10
     },
     "case_ids": [
-      "text-ratelimit",
-      "text-deploykey",
-      "text-port",
-      "html-capital",
-      "html-ceo",
-      "html-version",
-      "json-refund",
-      "json-fraud",
-      "json-chargeback",
-      "logs-disk",
-      "logs-oom",
-      "logs-cert",
-      "csv-compliance",
-      "csv-vip",
-      "csv-refund",
-      "csv-duplicate"
+      "text-01",
+      "text-02",
+      "text-03",
+      "text-04",
+      "text-05",
+      "text-06",
+      "text-07",
+      "text-08",
+      "text-09",
+      "text-10",
+      "html-01",
+      "html-02",
+      "html-03",
+      "html-04",
+      "html-05",
+      "html-06",
+      "html-07",
+      "html-08",
+      "html-09",
+      "html-10",
+      "json-01",
+      "json-02",
+      "json-03",
+      "json-04",
+      "json-05",
+      "json-06",
+      "json-07",
+      "json-08",
+      "json-09",
+      "json-10",
+      "logs-01",
+      "logs-02",
+      "logs-03",
+      "logs-04",
+      "logs-05",
+      "logs-06",
+      "logs-07",
+      "logs-08",
+      "logs-09",
+      "logs-10",
+      "tabular-01",
+      "tabular-02",
+      "tabular-03",
+      "tabular-04",
+      "tabular-05",
+      "tabular-06",
+      "tabular-07",
+      "tabular-08",
+      "tabular-09",
+      "tabular-10"
     ]
   },
   "budgets": [
@@ -47,78 +81,94 @@
     400
   ],
   "full": {
-    "accuracy": 0.375,
-    "correct": 6,
-    "n": 16,
-    "avg_tokens": 6671.25
+    "accuracy": 0.2,
+    "correct": 10,
+    "n": 50,
+    "avg_tokens": 6586.96,
+    "accuracy_ci95": [
+      0.11243629945973886,
+      0.3303737210448524
+    ]
   },
   "budget_results": [
     {
       "budget": 128,
-      "avg_tokens": 75.5,
-      "saved_ratio": 0.9886827805883455,
-      "accuracy": 0.875,
-      "correct": 14,
-      "n": 16,
-      "retention": 2.3333333333333335
+      "avg_tokens": 75.86,
+      "saved_ratio": 0.9884833064114553,
+      "accuracy": 0.74,
+      "accuracy_ci95": [
+        0.6044657801100008,
+        0.8412862034863262
+      ],
+      "correct": 37,
+      "n": 50,
+      "retention": 3.6999999999999997
     },
     {
       "budget": 256,
-      "avg_tokens": 156.8125,
-      "saved_ratio": 0.9764942851789394,
-      "accuracy": 0.75,
-      "correct": 12,
-      "n": 16,
-      "retention": 2.0
+      "avg_tokens": 159.18,
+      "saved_ratio": 0.9758340721668266,
+      "accuracy": 0.68,
+      "accuracy_ci95": [
+        0.5418944286372394,
+        0.792419559060006
+      ],
+      "correct": 34,
+      "n": 50,
+      "retention": 3.4
     },
     {
       "budget": 400,
-      "avg_tokens": 213.75,
-      "saved_ratio": 0.9679595278246206,
-      "accuracy": 0.75,
-      "correct": 12,
-      "n": 16,
-      "retention": 2.0
+      "avg_tokens": 217.4,
+      "saved_ratio": 0.966995396966127,
+      "accuracy": 0.7,
+      "accuracy_ci95": [
+        0.562493877226366,
+        0.8089661091039063
+      ],
+      "correct": 35,
+      "n": 50,
+      "retention": 3.4999999999999996
     }
   ],
   "cases": [
     {
-      "id": "text-ratelimit",
+      "id": "text-01",
       "content_type": "text",
       "question": "What is the API rate limit per hour?",
       "gold": "5000 requests per hour",
       "full": {
-        "correct": true,
-        "tokens": 4072,
-        "answer": "The API rate limit is 5000 requests per hour per key."
+        "correct": false,
+        "tokens": 4071,
+        "answer": "The API rate limit or quota is exceeded, and the API should be retried after the \"retry-after\" period specified in the HTTP error message. The exact retry duration can vary depending on the implementation details and requirements of your application. \n\nIn this case, it seems to exceed a certain number of requests per second, so you may need to add some delay between requests or reduce the frequency of calls."
       },
       "per_budget": {
         "128": {
-          "correct": true,
+          "correct": false,
           "tokens": 15,
-          "answer": "5000 requests per hour"
+          "answer": "5000"
         },
         "256": {
-          "correct": true,
+          "correct": false,
           "tokens": 15,
-          "answer": "5000 requests per hour"
+          "answer": "5000"
         },
         "400": {
-          "correct": true,
+          "correct": false,
           "tokens": 15,
-          "answer": "5000 requests per hour"
+          "answer": "5000"
         }
       }
     },
     {
-      "id": "text-deploykey",
+      "id": "text-02",
       "content_type": "text",
       "question": "How often does the deployment key rotate?",
       "gold": "every 24 hours",
       "full": {
-        "correct": true,
+        "correct": false,
         "tokens": 4069,
-        "answer": "The deployment key rotates automatically every 24 hours."
+        "answer": "The deployment frequency is not specified, but the answer to the question \"What does your deployment process look like?\" is present in this text. There isn't a specific mention of 'deployment' or any related term like continuous integration and continuous deployment (CI/CD) but there is enough information to say that they do use pipelines for development: there are over 70 occurrences of the word \"pipeline\" throughout this answer.\n\nTherefore, one possible interpretation of the provided text would be to assume, although it's not stated directly in the prompt, a deployment process does exist and uses 'pipelines' (or more explicitly: continuous integration) within their operations."
       },
       "per_budget": {
         "128": {
@@ -139,14 +189,14 @@
       }
     },
     {
-      "id": "text-port",
+      "id": "text-03",
       "content_type": "text",
       "question": "Which port does the metrics exporter listen on?",
       "gold": "port 9187",
       "full": {
-        "correct": true,
+        "correct": false,
         "tokens": 4060,
-        "answer": "\"Not specified in the output, but the default port for the metrics exporter is given as 9187\""
+        "answer": "918/928"
       },
       "per_budget": {
         "128": {
@@ -167,14 +217,210 @@
       }
     },
     {
-      "id": "html-capital",
+      "id": "text-04",
+      "content_type": "text",
+      "question": "What is the maximum upload size per file?",
+      "gold": "250 megabytes",
+      "full": {
+        "correct": false,
+        "tokens": 4066,
+        "answer": "The maximum upload size is 10 MB."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "250 megabytes"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "250 megabytes"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 13,
+          "answer": "250 megabytes"
+        }
+      }
+    },
+    {
+      "id": "text-05",
+      "content_type": "text",
+      "question": "What is the default session timeout?",
+      "gold": "30 minutes",
+      "full": {
+        "correct": true,
+        "tokens": 4068,
+        "answer": "30 minutes."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 106,
+          "answer": "30 minutes"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 230,
+          "answer": "30 minutes"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 381,
+          "answer": "30 minutes."
+        }
+      }
+    },
+    {
+      "id": "text-06",
+      "content_type": "text",
+      "question": "What time do the nightly backups run?",
+      "gold": "02:00 UTC",
+      "full": {
+        "correct": true,
+        "tokens": 4072,
+        "answer": "Yes, the nightly backups run at 02:00 UTC every day."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 14,
+          "answer": "02:00"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 14,
+          "answer": "02:00"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 14,
+          "answer": "02:00"
+        }
+      }
+    },
+    {
+      "id": "text-07",
+      "content_type": "text",
+      "question": "What is the support contact address?",
+      "gold": "help@auren.example",
+      "full": {
+        "correct": true,
+        "tokens": 4071,
+        "answer": "help@auren.example"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "help@auren.example"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "help@auren.example"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 14,
+          "answer": "help@auren.example"
+        }
+      }
+    },
+    {
+      "id": "text-08",
+      "content_type": "text",
+      "question": "What is the cache time-to-live in seconds?",
+      "gold": "900 seconds",
+      "full": {
+        "correct": true,
+        "tokens": 4071,
+        "answer": "The cache time-to-live is configured to 900 seconds."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 106,
+          "answer": "not found"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 229,
+          "answer": "900"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 384,
+          "answer": "not found"
+        }
+      }
+    },
+    {
+      "id": "text-09",
+      "content_type": "text",
+      "question": "What uptime does the SLA guarantee?",
+      "gold": "99.95 percent",
+      "full": {
+        "correct": false,
+        "tokens": 4074,
+        "answer": "The service guarantees 99.95% uptime under the SLA (Service Level Agreement)."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "99.95 percent"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "99.95 percent"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "99.95 percent"
+        }
+      }
+    },
+    {
+      "id": "text-10",
+      "content_type": "text",
+      "question": "How many times is a webhook retried?",
+      "gold": "5 times",
+      "full": {
+        "correct": false,
+        "tokens": 4063,
+        "answer": "5 retries."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "up to 5 times"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "up to 5 times"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 15,
+          "answer": "up to 5 times"
+        }
+      }
+    },
+    {
+      "id": "html-01",
       "content_type": "html",
       "question": "What is the capital of the Republic of Auren?",
       "gold": "Mateldorf",
       "full": {
-        "correct": true,
-        "tokens": 2813,
-        "answer": "Mateldorf."
+        "correct": false,
+        "tokens": 2810,
+        "answer": "not found"
       },
       "per_budget": {
         "128": {
@@ -195,41 +441,41 @@
       }
     },
     {
-      "id": "html-ceo",
+      "id": "html-02",
       "content_type": "html",
       "question": "Who is Acme Corp's chief executive officer?",
       "gold": "Dana Whitlock",
       "full": {
         "correct": true,
-        "tokens": 2812,
-        "answer": "Acme Corp's chief executive officer is Dana Whitlock."
+        "tokens": 2813,
+        "answer": "Dana Whitlock."
       },
       "per_budget": {
         "128": {
           "correct": true,
           "tokens": 13,
-          "answer": "Dana Whitlock"
+          "answer": "Dana Whitlock."
         },
         "256": {
           "correct": true,
           "tokens": 13,
-          "answer": "Dana Whitlock"
+          "answer": "Dana Whitlock."
         },
         "400": {
           "correct": true,
           "tokens": 13,
-          "answer": "Dana Whitlock"
+          "answer": "Dana Whitlock."
         }
       }
     },
     {
-      "id": "html-version",
+      "id": "html-03",
       "content_type": "html",
       "question": "What is the current stable release version?",
       "gold": "12.4.1",
       "full": {
         "correct": true,
-        "tokens": 2812,
+        "tokens": 2816,
         "answer": "12.4.1"
       },
       "per_budget": {
@@ -251,104 +497,496 @@
       }
     },
     {
-      "id": "json-refund",
+      "id": "html-04",
+      "content_type": "html",
+      "question": "Where is the company headquarters located?",
+      "gold": "Brindale",
+      "full": {
+        "correct": true,
+        "tokens": 2809,
+        "answer": "Brindale."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "Brindale."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "Brindale."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "Brindale."
+        }
+      }
+    },
+    {
+      "id": "html-05",
+      "content_type": "html",
+      "question": "In what year was the organization founded?",
+      "gold": "1987",
+      "full": {
+        "correct": true,
+        "tokens": 2809,
+        "answer": "1987"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "1987"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "1987"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "1987"
+        }
+      }
+    },
+    {
+      "id": "html-06",
+      "content_type": "html",
+      "question": "What time does the museum close on Sundays?",
+      "gold": "6 pm",
+      "full": {
+        "correct": false,
+        "tokens": 2810,
+        "answer": "not found"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "6 pm"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "6 pm"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "6 pm"
+        }
+      }
+    },
+    {
+      "id": "html-07",
+      "content_type": "html",
+      "question": "Who is the keynote speaker?",
+      "gold": "Halvard Reyes",
+      "full": {
+        "correct": true,
+        "tokens": 2810,
+        "answer": "The keynote speaker is Professor Halvard Reyes."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 10,
+          "answer": "Professor Halvard Reyes."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 10,
+          "answer": "Professor Halvard Reyes."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 10,
+          "answer": "Professor Halvard Reyes."
+        }
+      }
+    },
+    {
+      "id": "html-08",
+      "content_type": "html",
+      "question": "How many floors does the tower building have?",
+      "gold": "42 floors",
+      "full": {
+        "correct": false,
+        "tokens": 2805,
+        "answer": "42"
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 11,
+          "answer": "42"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 11,
+          "answer": "42"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 11,
+          "answer": "42"
+        }
+      }
+    },
+    {
+      "id": "html-09",
+      "content_type": "html",
+      "question": "How long does the product warranty last?",
+      "gold": "36 months",
+      "full": {
+        "correct": true,
+        "tokens": 2804,
+        "answer": "36 months."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "36 months"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "36 months"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 11,
+          "answer": "36 months"
+        }
+      }
+    },
+    {
+      "id": "html-10",
+      "content_type": "html",
+      "question": "Which pier does the ferry depart from?",
+      "gold": "Pier 9",
+      "full": {
+        "correct": false,
+        "tokens": 2798,
+        "answer": "not found"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "Pier 9"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "Pier 9"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 12,
+          "answer": "Pier 9"
+        }
+      }
+    },
+    {
+      "id": "json-01",
       "content_type": "json",
       "question": "Which note mentions a refund issued to a customer?",
       "gold": "refund issued to customer 4417",
       "full": {
         "correct": false,
-        "tokens": 10546,
-        "answer": "This is a large JSON array of objects, each representing a transaction or event with fields for `id`, `status` (e.g., `failed`, `pending`, or `ok`), and possibly others. The length of the array is 299."
+        "tokens": 10536,
+        "answer": "`[{\"id\":299,\"status\":\"failed\",\"amount\":9197.3,\"note\":\"Request handler service timeout account queue cache downstream.\"},{\"id\":298,\"status\":\"pending\",\"amount\":2537.5,\"note\":\"Cache balance pipeline order session account shard pipeline.\"}]`"
       },
       "per_budget": {
         "128": {
           "correct": true,
-          "tokens": 99,
-          "answer": "refund issued to customer 4417 for amount 250."
+          "tokens": 100,
+          "answer": "refund issued to customer 4417 for amount 250"
         },
         "256": {
           "correct": true,
           "tokens": 235,
-          "answer": "\"A refund issued to customer 4417 for amount 250\""
+          "answer": "\"refund issued to customer 4417 for amount 250\""
         },
         "400": {
           "correct": true,
           "tokens": 235,
-          "answer": "\"A refund issued to customer 4417 for amount 250\""
+          "answer": "\"refund issued to customer 4417 for amount 250\""
         }
       }
     },
     {
-      "id": "json-fraud",
+      "id": "json-02",
       "content_type": "json",
       "question": "Which note was flagged for manual fraud review?",
       "gold": "flagged for manual fraud review",
       "full": {
         "correct": false,
-        "tokens": 10546,
-        "answer": "There are 1,000 items in the list."
+        "tokens": 10533,
+        "answer": "It appears to be a JSON object containing an array of transactions or items with various statuses and notes. To provide a concise answer, I would need more context on what specific information you are looking for (e.g., sum of successful transactions, total amount transferred, etc.). If you could provide more details, I'd be happy to help."
       },
       "per_budget": {
         "128": {
           "correct": true,
-          "tokens": 99,
-          "answer": "\"Downstream account order downstream handler metric latency shard.\" note, flagged for manual fraud review was id 211 with \"flagged for manual fraud review by analyst kim\""
+          "tokens": 98,
+          "answer": "\"flagged for manual fraud review by analyst kim\""
         },
         "256": {
           "correct": true,
-          "tokens": 237,
+          "tokens": 235,
           "answer": "\"flagged for manual fraud review by analyst kim\""
         },
         "400": {
           "correct": true,
-          "tokens": 237,
+          "tokens": 235,
           "answer": "\"flagged for manual fraud review by analyst kim\""
         }
       }
     },
     {
-      "id": "json-chargeback",
+      "id": "json-03",
       "content_type": "json",
       "question": "Which note mentions a chargeback dispute reason code?",
       "gold": "chargeback disputed under reason code 4853",
       "full": {
         "correct": false,
-        "tokens": 10542,
-        "answer": "It appears to be a JSON array of objects containing ID and status (in the form \"ID/status\"). I'd need more context or a question about this data for a concise answer."
+        "tokens": 10543,
+        "answer": "There are 299 records in the dataset, with statuses ranging from \"ok\" to \"pending\" and \"failed\". The exact distribution of statuses is not provided due to the volume of data."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 98,
+          "answer": "\"4853\""
+        },
+        "256": {
+          "correct": false,
+          "tokens": 234,
+          "answer": "\"4853\""
+        },
+        "400": {
+          "correct": false,
+          "tokens": 234,
+          "answer": "\"4853\""
+        }
+      }
+    },
+    {
+      "id": "json-04",
+      "content_type": "json",
+      "question": "Which note mentions an account locked after failed logins?",
+      "gold": "account locked after 5 failed login",
+      "full": {
+        "correct": false,
+        "tokens": 10538,
+        "answer": "This is a JSON object containing a large list of objects with financial data where each item has an \"amount\" and a \"note\" property. It appears to be an export of transactions or payments with associated notes or descriptions. \n\nI can help you extract, sort, group, filter and format this data if needed."
       },
       "per_budget": {
         "128": {
           "correct": true,
           "tokens": 97,
-          "answer": "chargeback disputed under reason code 4853"
+          "answer": "account locked after 5 failed login attempts"
         },
         "256": {
-          "correct": false,
+          "correct": true,
           "tokens": 232,
-          "answer": "\"reason code 4853\""
+          "answer": "\"account locked after 5 failed login attempts\""
         },
         "400": {
-          "correct": false,
+          "correct": true,
           "tokens": 232,
-          "answer": "\"reason code 4853\""
+          "answer": "\"account locked after 5 failed login attempts\""
         }
       }
     },
     {
-      "id": "logs-disk",
+      "id": "json-05",
+      "content_type": "json",
+      "question": "Which note mentions a shipment delayed at customs?",
+      "gold": "shipment delayed at customs",
+      "full": {
+        "correct": false,
+        "tokens": 10540,
+        "answer": "There are 299 transactions in the provided JSON data."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 99,
+          "answer": "\"shipment delayed at customs checkpoint port 7\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 234,
+          "answer": "\"note\":\"shipment delayed at customs checkpoint port 7\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 234,
+          "answer": "\"note\":\"shipment delayed at customs checkpoint port 7\""
+        }
+      }
+    },
+    {
+      "id": "json-06",
+      "content_type": "json",
+      "question": "Which note mentions a coupon applied at checkout?",
+      "gold": "coupon SAVE20 applied at checkout",
+      "full": {
+        "correct": false,
+        "tokens": 10532,
+        "answer": "There are **2** \"ok\" status transactions, **298** failed transactions."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": "\"coupon SAVE20 applied at checkout successfully\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"coupon applied at checkout successfully\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"coupon applied at checkout successfully\""
+        }
+      }
+    },
+    {
+      "id": "json-07",
+      "content_type": "json",
+      "question": "Which note mentions a subscription downgraded to basic tier?",
+      "gold": "subscription downgraded to tier basic",
+      "full": {
+        "correct": false,
+        "tokens": 10541,
+        "answer": "This appears to be a JSON response with a large list of objects, each representing the status and an amount associated with some operation or task, with a wide variety of keywords (e.g. \"region\", \"shard\", \"ledger\", \"session\", \"invoice\") spread throughout its notes. A concise answer requires more context about what is being asked - which aspect of this data would you like summarized?"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": "\"subscription downgraded to tier basic\""
+        },
+        "256": {
+          "correct": false,
+          "tokens": 233,
+          "answer": "\"Tier basic by request\""
+        },
+        "400": {
+          "correct": false,
+          "tokens": 233,
+          "answer": "\"Tier basic by request\""
+        }
+      }
+    },
+    {
+      "id": "json-08",
+      "content_type": "json",
+      "question": "Which note mentions a payment retried via a backup processor?",
+      "gold": "payment retried via backup processor",
+      "full": {
+        "correct": false,
+        "tokens": 10533,
+        "answer": "A large JSON array of objects.\n\nWould you like me to help with anything specific (e.g., extracting certain fields or grouping by a particular field)?"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": "The note mentions a payment retried via a backup processor: \"payment retried via backup processor stripe\" note at ID 80."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"payment retried via backup processor stripe\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"payment retried via backup processor stripe\""
+        }
+      }
+    },
+    {
+      "id": "json-09",
+      "content_type": "json",
+      "question": "Which note mentions an address verification failure?",
+      "gold": "address verification failed",
+      "full": {
+        "correct": false,
+        "tokens": 10544,
+        "answer": "A very long list of JSON objects!\n\nTo provide a concise answer, I'll summarize the data:\n\n**Count of statuses:**\n\n* Success (ok): 55\n* Failed: 244\n* Pending: 0 (not counting \"status\" values other than \"pending\", but rather exact matches)\n\n**Most represented status:**\n\n* Failed (244 occurred 4.98 times more than the next most common)"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": "\"address verification failed with avs code N\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"address verification failed with avs code \""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "\"address verification failed with avs code \""
+        }
+      }
+    },
+    {
+      "id": "json-10",
+      "content_type": "json",
+      "question": "Which note mentions an invoice exported to a ledger batch?",
+      "gold": "invoice exported to ledger batch 88",
+      "full": {
+        "correct": false,
+        "tokens": 10531,
+        "answer": "There are 300 transactions in the dataset."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": "\"invoice exported to ledger batch 88 nightly\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "invoice exported to ledger batch 88 nightly"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": "invoice exported to ledger batch 88 nightly"
+        }
+      }
+    },
+    {
+      "id": "logs-01",
       "content_type": "logs",
       "question": "What error mentions disk usage on /var/data?",
       "gold": "disk usage 98 percent on /var/data",
       "full": {
         "correct": false,
         "tokens": 7605,
-        "answer": "The system is experiencing frequent heartbeats (INFO logs) every minute, but there's a single ERROR log at 10:42:54 that disk space is low."
+        "answer": "The service is consistently sending heartbeats to confirm it's still functioning."
       },
       "per_budget": {
         "128": {
-          "correct": false,
+          "correct": true,
           "tokens": 123,
-          "answer": "96% (not the case, actually) ... 98 percent \n\nExplanation. The exact relevant value is '98 percent'."
+          "answer": "disk usage 98 percent on /var/data writes failing"
         },
         "256": {
           "correct": false,
@@ -356,49 +994,49 @@
           "answer": "98 percent"
         },
         "400": {
-          "correct": false,
-          "tokens": 389,
-          "answer": "98"
+          "correct": true,
+          "tokens": 387,
+          "answer": "ERROR disk usage 98 percent on /var/data writes failing"
         }
       }
     },
     {
-      "id": "logs-oom",
+      "id": "logs-02",
       "content_type": "logs",
       "question": "What error mentions an out of memory condition?",
       "gold": "out of memory killing process pid 8123",
       "full": {
         "correct": false,
         "tokens": 7603,
-        "answer": "The system appears to be operating within normal parameters, with only one exception where it encountered a memory issue (\"2026-06-27 10:42:54 ERROR: MEMORY_ISSUE\"). There is also a notable lack of any non-standard error messages."
+        "answer": "The output pattern is a repeating cycle of heartbeats from a worker with ID 3, indicating that the worker is operating normally."
       },
       "per_budget": {
         "128": {
-          "correct": true,
+          "correct": false,
           "tokens": 121,
-          "answer": "out of memory killing process pid 8123"
+          "answer": "out of memory"
         },
         "256": {
-          "correct": false,
+          "correct": true,
           "tokens": 254,
-          "answer": "not found"
+          "answer": "ERROR out of memory killing process pid 8123"
         },
         "400": {
-          "correct": false,
+          "correct": true,
           "tokens": 387,
-          "answer": "\" Out of memory \""
+          "answer": "ERROR out of memory killing process pid 8123"
         }
       }
     },
     {
-      "id": "logs-cert",
+      "id": "logs-03",
       "content_type": "logs",
       "question": "What error mentions an expired tls certificate?",
       "gold": "tls certificate expired for host api.example.com",
       "full": {
         "correct": false,
         "tokens": 7602,
-        "answer": "The system has been sending heartbeat messages at regular intervals, but there is a notable exception where the message \"ERROR** 2022-07-27 10:42:54 INFO\" was logged due to an unspecified reason."
+        "answer": "Heartbeat logs showing consistent presence of worker #3 from time 00:05 to 09:40 on June 27."
       },
       "per_budget": {
         "128": {
@@ -419,114 +1057,478 @@
       }
     },
     {
-      "id": "csv-compliance",
-      "content_type": "tabular",
-      "question": "Which note was flagged for compliance review?",
-      "gold": "flagged for compliance review under sanctions list",
+      "id": "logs-04",
+      "content_type": "logs",
+      "question": "What error mentions a refused database connection?",
+      "gold": "connection refused to database replica 2",
       "full": {
         "correct": false,
-        "tokens": 7925,
-        "answer": "It appears to be a large list of API calls or system events with various keys and values, possibly generated by an analytics package or monitoring tool. If you'd like me to help extract specific information from this dataset, please provide more context or specify which aspects you're interested in!"
+        "tokens": 7601,
+        "answer": "There are 84 consecutive beacons from the same worker at 1-minute intervals, indicating a possible system issue."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 119,
+          "answer": "2026-06-27 10:42:11 ERROR connection refused"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 252,
+          "answer": "\"connection refused to database replica 2\""
+        },
+        "400": {
+          "correct": false,
+          "tokens": 385,
+          "answer": "ERROR 2003"
+        }
+      }
+    },
+    {
+      "id": "logs-05",
+      "content_type": "logs",
+      "question": "What error mentions a deadlock on a table?",
+      "gold": "deadlock detected on table orders",
+      "full": {
+        "correct": false,
+        "tokens": 7601,
+        "answer": "The system appears to be functioning normally, with no reported errors. The messages are all identical (\"INFO heartbeat ok worker=3\") indicating a regular heartbeat signal from the system's worker process 3."
       },
       "per_budget": {
         "128": {
           "correct": true,
           "tokens": 119,
-          "answer": "'flagged for compliance review under sanctions list'"
+          "answer": "deadlock detected on table orders"
         },
         "256": {
           "correct": true,
-          "tokens": 242,
-          "answer": "flagged for compliance review under sanctions list"
+          "tokens": 252,
+          "answer": "2026-06-27 10:42:11 ERROR deadlock detected on table orders during commit."
         },
         "400": {
           "correct": true,
-          "tokens": 368,
-          "answer": "flagged for compliance review under sanctions list"
+          "tokens": 385,
+          "answer": "ERROR deadlock detected on table orders during commit"
         }
       }
     },
     {
-      "id": "csv-vip",
+      "id": "logs-06",
+      "content_type": "logs",
+      "question": "What error mentions a rate limit exceeded for an api key?",
+      "gold": "rate limit exceeded for api key 7af3",
+      "full": {
+        "correct": false,
+        "tokens": 7606,
+        "answer": "It looks like a script that periodically sends \"INFO heartbeat ok\" messages with a timestamp, repeating indefinitely."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 124,
+          "answer": "ERROR rate limit exceeded for api key"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 257,
+          "answer": "throttling"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 390,
+          "answer": "rate limit exceeded"
+        }
+      }
+    },
+    {
+      "id": "logs-07",
+      "content_type": "logs",
+      "question": "What error mentions a failure to bind to a port?",
+      "gold": "failed to bind to port 8443",
+      "full": {
+        "correct": false,
+        "tokens": 7605,
+        "answer": "The system is sending periodic \"heartbeat\" messages with no issues or errors reported, indicating that it's functioning normally."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 123,
+          "answer": "\"already in use\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 256,
+          "answer": "failed to bind to port 8443 already in use"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 389,
+          "answer": "2026-06-27 10:42:11 ERROR failed to bind to port 8443 already in use"
+        }
+      }
+    },
+    {
+      "id": "logs-08",
+      "content_type": "logs",
+      "question": "What error mentions a segmentation fault in a worker thread?",
+      "gold": "segmentation fault in worker thread 11",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": "Heartbeat messages sent by worker #3 every minute for an entire hour."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 120,
+          "answer": "ERROR segmentation fault in worker thread ... crashed"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 253,
+          "answer": "Not found."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 386,
+          "answer": "2026-06-27 10:42:11 ERROR segmentation fault in worker thread 11 crashed"
+        }
+      }
+    },
+    {
+      "id": "logs-09",
+      "content_type": "logs",
+      "question": "What error mentions kafka consumer lag?",
+      "gold": "kafka consumer lag exceeded 100000",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": "The process is sending heartbeats every minute."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 120,
+          "answer": "100000"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 253,
+          "answer": "100000"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 386,
+          "answer": "not found"
+        }
+      }
+    },
+    {
+      "id": "logs-10",
+      "content_type": "logs",
+      "question": "What error mentions an nfs mount timeout?",
+      "gold": "nfs mount timed out on /shared/cache",
+      "full": {
+        "correct": false,
+        "tokens": 7604,
+        "answer": "The system or process being monitored is running normally and successfully, as it has sent a \"heatmap\" of messages with no indications of errors or failures for an extended period (at least 1 hour)."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 122,
+          "answer": "nfs mount timed out for a retry of mounting on /shared/cache"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 255,
+          "answer": "nfs mount timed out on /shared/cache retrying"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 388,
+          "answer": "\"nfs mount timed out on /shared/cache\" (retrying not found)"
+        }
+      }
+    },
+    {
+      "id": "tabular-01",
+      "content_type": "tabular",
+      "question": "Which note was flagged for compliance review?",
+      "gold": "flagged for compliance review under sanctions list",
+      "full": {
+        "correct": false,
+        "tokens": 7939,
+        "answer": "It looks like a dump of 500 SQL queries or log records in a CSV-like format, but without any clear pattern or organization. Is there something specific you'd like me to extract or query from this data?"
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 119,
+          "answer": "149.50 was not found. flagged is the relevant value."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 243,
+          "answer": "49.0"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 363,
+          "answer": "147.50"
+        }
+      }
+    },
+    {
+      "id": "tabular-02",
       "content_type": "tabular",
       "question": "Which note mentions a vip customer requiring priority handling?",
       "gold": "vip customer requires priority handling",
       "full": {
         "correct": false,
-        "tokens": 7905,
-        "answer": "It appears to be a list of 499 system monitor or error reporting entries with cryptic codes and possibly related to technical issues in a distributed system. Without further context, it's difficult for me to provide a meaningful concise answer. Can you provide more information about its origin and intended use? I can try to deduce any patterns or insights from the data if needed!"
+        "tokens": 7939,
+        "answer": "There is no question or prompt to answer; the provided text appears to be a large list of entries with some form of data. If you'd like to provide a specific task or request related to this list, I'd be more than happy to assist you."
       },
       "per_budget": {
         "128": {
           "correct": true,
-          "tokens": 116,
+          "tokens": 115,
           "answer": "vip customer requires priority handling tier gold"
         },
         "256": {
           "correct": true,
           "tokens": 238,
-          "answer": "vip customer requires priority handling tier gold."
+          "answer": "62, vip customer requires priority handling tier gold"
         },
         "400": {
           "correct": true,
           "tokens": 377,
-          "answer": "\"vip customer requires priority handling tier gold.\" (note #333) is the mention where a vip customer requiring priority handling is noted but  the actual value of note mentioned as \"vip customer requires priority handling tier\" has no specific numeric value."
+          "answer": "vip customer requires priority handling tier gold"
         }
       }
     },
     {
-      "id": "csv-refund",
+      "id": "tabular-03",
       "content_type": "tabular",
       "question": "Which note mentions a partial refund approval?",
       "gold": "partial refund approved by supervisor delgado",
       "full": {
         "correct": false,
-        "tokens": 7938,
-        "answer": "This appears to be a large dataset of customer transactions or events from an e-commerce platform. Is there anything specific you'd like me to extract or analyze from this data?"
+        "tokens": 7912,
+        "answer": "It appears to be a list of 500 API request logs with various error messages and latency metrics."
       },
       "per_budget": {
         "128": {
-          "correct": true,
-          "tokens": 117,
-          "answer": "partial refund approved by supervisor delgado"
+          "correct": false,
+          "tokens": 118,
+          "answer": "\"partial refund approved\""
         },
         "256": {
-          "correct": true,
-          "tokens": 241,
-          "answer": "partial refund approved by supervisor delgado"
+          "correct": false,
+          "tokens": 243,
+          "answer": "75.50"
         },
         "400": {
           "correct": true,
-          "tokens": 366,
+          "tokens": 367,
           "answer": "\"partial refund approved by supervisor delgado\""
         }
       }
     },
     {
-      "id": "csv-duplicate",
+      "id": "tabular-04",
       "content_type": "tabular",
       "question": "Which note mentions a duplicate transaction?",
       "gold": "duplicate transaction detected and voided",
       "full": {
         "correct": false,
-        "tokens": 7890,
-        "answer": "Based on the provided output, it appears to be a large table or list of items without any clear structure or categorization. Without more context or a specific question to answer, I'll provide a concise statement:\n\nThe output is a lengthy, alphabetical sequence (from 1-499) detailing a variety of terms related to IT or business operations."
+        "tokens": 7939,
+        "answer": "Based on the text, it appears to be a list of latency metrics for various operations in a system. To provide a concise answer, I will extract some general information from this extensive dataset:\n\n* The highest latency value is 1497.50.\n* Most common top-level categories include:\n\t+ Queue (121 instances)\n\t+ Ledger (81 instances)\n\t+ Pipeline (68 instances)\n\t+ Service (54 instances)\n\t+ Region (46 instances)\n\t+ System (44 instances)"
       },
       "per_budget": {
         "128": {
           "correct": true,
-          "tokens": 118,
+          "tokens": 116,
           "answer": "duplicate transaction detected and voided automatically"
         },
         "256": {
           "correct": true,
-          "tokens": 242,
+          "tokens": 241,
           "answer": "duplicate transaction detected and voided automatically"
         },
         "400": {
           "correct": true,
           "tokens": 364,
           "answer": "duplicate transaction detected and voided automatically"
+        }
+      }
+    },
+    {
+      "id": "tabular-05",
+      "content_type": "tabular",
+      "question": "Which note mentions a manual override applied by an agent?",
+      "gold": "manual override applied by agent 0091",
+      "full": {
+        "correct": false,
+        "tokens": 7900,
+        "answer": "It looks like a list of API request results in JSON format with a success status code (200). Each entry has a unique ID from 1 to 499 and appears to be related to system infrastructure or software deployment. Would you like me to extract some specific information or summarize this data?"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 118,
+          "answer": "\"manual override applied by agent 0091 at desk\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 240,
+          "answer": "\"manual override applied by agent 0091 at desk\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 363,
+          "answer": "101,eu,ok,303.50,manual override applied by agent 0091 at desk"
+        }
+      }
+    },
+    {
+      "id": "tabular-06",
+      "content_type": "tabular",
+      "question": "Which note mentions a high risk score requiring secondary approval?",
+      "gold": "high risk score requires secondary approval",
+      "full": {
+        "correct": false,
+        "tokens": 7919,
+        "answer": "It appears to be a list of 499 pairs of numbers in format \"X.ok\" where X is an integer from 1 to 499. There are no descriptive or contextual clues provided."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 115,
+          "answer": "not found"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": "114.50 is not found in the output. However, a note mentions \"high risk score requires secondary approval review\" which seems to imply that the relevant record has id 114. The amount corresponding to this id is indeed \"342.50\", but this does not mention a high risk score requiring secondary approval as per your query."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 364,
+          "answer": "342.50"
+        }
+      }
+    },
+    {
+      "id": "tabular-07",
+      "content_type": "tabular",
+      "question": "Which note mentions a chargeback reversed after evidence?",
+      "gold": "chargeback reversed after evidence submitted",
+      "full": {
+        "correct": false,
+        "tokens": 7905,
+        "answer": "There is no clear question or problem to be solved based on the provided text. It appears to be a list of IDs and their associated values in a CSV-like format. If you provide more context or clarify what you need assistance with, I can try to help you further."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": "chargeback reversed after evidence \n\nNote id is 127 \namount of $381.50"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 241,
+          "answer": "381.50"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 363,
+          "answer": "381.50"
+        }
+      }
+    },
+    {
+      "id": "tabular-08",
+      "content_type": "tabular",
+      "question": "Which note mentions loyalty points credited for a referral?",
+      "gold": "loyalty points credited for referral",
+      "full": {
+        "correct": false,
+        "tokens": 7930,
+        "answer": "The list of metrics appears to be a long queue of measurements for various system components, with each entry consisting of:\n\n* Number (001-499)\n* Metric name or description\n\nThere is no clear pattern or categorization in the list, but it seems to involve various aspects of system performance, such as latency, throughput, and error rates."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 117,
+          "answer": "loyalty points credited for referral bonus program, 420.50"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 241,
+          "answer": "420.50"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 364,
+          "answer": "420.50"
+        }
+      }
+    },
+    {
+      "id": "tabular-09",
+      "content_type": "tabular",
+      "question": "Which note mentions a shipment rerouted to an alternate warehouse?",
+      "gold": "shipment rerouted to alternate warehouse",
+      "full": {
+        "correct": false,
+        "tokens": 7900,
+        "answer": "It appears to be an overwhelming amount of data.\n\nHowever, I can try to provide some general insights:\n\n* The dataset seems to contain various metrics and data points related to a system or process.\n* There are multiple entities mentioned, such as \"system\", \"service\", \"account\", \"user\", etc.\n* Time-related metrics like \"timeout\" and \"latency\" are common throughout the data.\n* The use of phrases like \"response time\" and \"request latency\" implies that the data is related to performance monitoring or optimization.\n\nIf you could provide a specific question or task related to this dataset, I'd be happy to try and assist you."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 116,
+          "answer": "\"shipment rerouted to alternate warehouse depot 3\""
+        },
+        "256": {
+          "correct": false,
+          "tokens": 241,
+          "answer": "459.50"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 378,
+          "answer": "459.50"
+        }
+      }
+    },
+    {
+      "id": "tabular-10",
+      "content_type": "tabular",
+      "question": "Which note mentions a tax exemption for a nonprofit account?",
+      "gold": "tax exemption applied for nonprofit account",
+      "full": {
+        "correct": false,
+        "tokens": 7894,
+        "answer": "These are 499 records of successful HTTP requests with varying parameters and message fields in a data log format. The data appears to be related to an application or system that processes user requests, invoices, orders, and other transactions. Without more context or information about the specific use case or application, it's difficult to provide any meaningful insights or derive actionable conclusions."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 115,
+          "answer": "tax exemption applied for nonprofit account holder"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": "tax exemption applied for nonprofit account holder"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 378,
+          "answer": "166,eu,ok,498.50,tax exemption applied for nonprofit account holder"
         }
       }
     }
