@@ -90,88 +90,170 @@ def _csv_blob(cell: str, n: int = 500, at: int = 333) -> str:
     return "\n".join(rows)
 
 
-# --- the cases -----------------------------------------------------------------
+# --- declarative case specs ----------------------------------------------------
+# (content_type, needle, question, gold)
+#   text/html: `needle` is the sentence embedded in the page; gold is the fact.
+#   json/logs/tabular: `needle` is the field value / log line; gold is the match.
+
+_SPECS = [
+    # ---- text (prose) ----
+    ("text", "The API rate limit is 5000 requests per hour per key.",
+     "What is the API rate limit per hour?", "5000 requests per hour"),
+    ("text", "The deployment key rotates automatically every 24 hours.",
+     "How often does the deployment key rotate?", "every 24 hours"),
+    ("text", "The metrics exporter listens on port 9187 by default.",
+     "Which port does the metrics exporter listen on?", "port 9187"),
+    ("text", "The maximum upload size is 250 megabytes per file.",
+     "What is the maximum upload size per file?", "250 megabytes"),
+    ("text", "The default session timeout is 30 minutes of inactivity.",
+     "What is the default session timeout?", "30 minutes"),
+    ("text", "Nightly backups run at 02:00 UTC every day.",
+     "What time do the nightly backups run?", "02:00 UTC"),
+    ("text", "The support contact address is help@auren.example for all tiers.",
+     "What is the support contact address?", "help@auren.example"),
+    ("text", "The cache time-to-live is configured to 900 seconds.",
+     "What is the cache time-to-live in seconds?", "900 seconds"),
+    ("text", "The service guarantees 99.95 percent uptime under the SLA.",
+     "What uptime does the SLA guarantee?", "99.95 percent"),
+    ("text", "Each webhook is retried up to 5 times before being dropped.",
+     "How many times is a webhook retried?", "5 times"),
+
+    # ---- html (web page) ----
+    ("html", "The capital of the Republic of Auren is Mateldorf.",
+     "What is the capital of the Republic of Auren?", "Mateldorf"),
+    ("html", "Acme Corp's chief executive officer is Dana Whitlock.",
+     "Who is Acme Corp's chief executive officer?", "Dana Whitlock"),
+    ("html", "The current stable release is version 12.4.1.",
+     "What is the current stable release version?", "12.4.1"),
+    ("html", "The company headquarters is located in Brindale.",
+     "Where is the company headquarters located?", "Brindale"),
+    ("html", "The organization was founded in the year 1987.",
+     "In what year was the organization founded?", "1987"),
+    ("html", "The museum closes at 6 pm on Sundays.",
+     "What time does the museum close on Sundays?", "6 pm"),
+    ("html", "The keynote speaker is Professor Halvard Reyes.",
+     "Who is the keynote speaker?", "Halvard Reyes"),
+    ("html", "The tower building has 42 floors in total.",
+     "How many floors does the tower building have?", "42 floors"),
+    ("html", "The product warranty lasts 36 months from purchase.",
+     "How long does the product warranty last?", "36 months"),
+    ("html", "The ferry departs from Pier 9 every morning.",
+     "Which pier does the ferry depart from?", "Pier 9"),
+
+    # ---- json (api response notes) ----
+    ("json", "refund issued to customer 4417 for amount 250",
+     "Which note mentions a refund issued to a customer?",
+     "refund issued to customer 4417"),
+    ("json", "flagged for manual fraud review by analyst kim",
+     "Which note was flagged for manual fraud review?",
+     "flagged for manual fraud review"),
+    ("json", "chargeback disputed under reason code 4853",
+     "Which note mentions a chargeback dispute reason code?",
+     "chargeback disputed under reason code 4853"),
+    ("json", "account locked after 5 failed login attempts",
+     "Which note mentions an account locked after failed logins?",
+     "account locked after 5 failed login"),
+    ("json", "shipment delayed at customs checkpoint port 7",
+     "Which note mentions a shipment delayed at customs?",
+     "shipment delayed at customs"),
+    ("json", "coupon SAVE20 applied at checkout successfully",
+     "Which note mentions a coupon applied at checkout?",
+     "coupon SAVE20 applied at checkout"),
+    ("json", "subscription downgraded to tier basic by request",
+     "Which note mentions a subscription downgraded to basic tier?",
+     "subscription downgraded to tier basic"),
+    ("json", "payment retried via backup processor stripe",
+     "Which note mentions a payment retried via a backup processor?",
+     "payment retried via backup processor"),
+    ("json", "address verification failed with avs code N",
+     "Which note mentions an address verification failure?",
+     "address verification failed"),
+    ("json", "invoice exported to ledger batch 88 nightly",
+     "Which note mentions an invoice exported to a ledger batch?",
+     "invoice exported to ledger batch 88"),
+
+    # ---- logs (server logs) ----
+    ("logs", "disk usage 98 percent on /var/data writes failing",
+     "What error mentions disk usage on /var/data?",
+     "disk usage 98 percent on /var/data"),
+    ("logs", "out of memory killing process pid 8123",
+     "What error mentions an out of memory condition?",
+     "out of memory killing process pid 8123"),
+    ("logs", "tls certificate expired for host api.example.com",
+     "What error mentions an expired tls certificate?",
+     "tls certificate expired for host api.example.com"),
+    ("logs", "connection refused to database replica 2",
+     "What error mentions a refused database connection?",
+     "connection refused to database replica 2"),
+    ("logs", "deadlock detected on table orders during commit",
+     "What error mentions a deadlock on a table?",
+     "deadlock detected on table orders"),
+    ("logs", "rate limit exceeded for api key 7af3 throttling",
+     "What error mentions a rate limit exceeded for an api key?",
+     "rate limit exceeded for api key 7af3"),
+    ("logs", "failed to bind to port 8443 already in use",
+     "What error mentions a failure to bind to a port?",
+     "failed to bind to port 8443"),
+    ("logs", "segmentation fault in worker thread 11 crashed",
+     "What error mentions a segmentation fault in a worker thread?",
+     "segmentation fault in worker thread 11"),
+    ("logs", "kafka consumer lag exceeded 100000 messages",
+     "What error mentions kafka consumer lag?",
+     "kafka consumer lag exceeded 100000"),
+    ("logs", "nfs mount timed out on /shared/cache retrying",
+     "What error mentions an nfs mount timeout?",
+     "nfs mount timed out on /shared/cache"),
+
+    # ---- tabular (csv export notes) ----
+    ("tabular", "flagged for compliance review under sanctions list",
+     "Which note was flagged for compliance review?",
+     "flagged for compliance review under sanctions list"),
+    ("tabular", "vip customer requires priority handling tier gold",
+     "Which note mentions a vip customer requiring priority handling?",
+     "vip customer requires priority handling"),
+    ("tabular", "partial refund approved by supervisor delgado",
+     "Which note mentions a partial refund approval?",
+     "partial refund approved by supervisor delgado"),
+    ("tabular", "duplicate transaction detected and voided automatically",
+     "Which note mentions a duplicate transaction?",
+     "duplicate transaction detected and voided"),
+    ("tabular", "manual override applied by agent 0091 at desk",
+     "Which note mentions a manual override applied by an agent?",
+     "manual override applied by agent 0091"),
+    ("tabular", "high risk score requires secondary approval review",
+     "Which note mentions a high risk score requiring secondary approval?",
+     "high risk score requires secondary approval"),
+    ("tabular", "chargeback reversed after evidence submitted by merchant",
+     "Which note mentions a chargeback reversed after evidence?",
+     "chargeback reversed after evidence submitted"),
+    ("tabular", "loyalty points credited for referral bonus program",
+     "Which note mentions loyalty points credited for a referral?",
+     "loyalty points credited for referral"),
+    ("tabular", "shipment rerouted to alternate warehouse depot 3",
+     "Which note mentions a shipment rerouted to an alternate warehouse?",
+     "shipment rerouted to alternate warehouse"),
+    ("tabular", "tax exemption applied for nonprofit account holder",
+     "Which note mentions a tax exemption for a nonprofit account?",
+     "tax exemption applied for nonprofit account"),
+]
+
+_BUILDERS = {
+    "text": _text_blob,
+    "html": _html_blob,
+    "json": _json_blob,
+    "logs": _logs_blob,
+    "tabular": _csv_blob,
+}
+
 
 def default_cases() -> List[Case]:
-    """Return the curated faithfulness cases (16 across 5 content types)."""
+    """Return the curated faithfulness cases (50 across 5 content types)."""
+    counters: dict = {}
     cases: List[Case] = []
-
-    # Text
-    cases += [
-        Case("text-ratelimit", "text",
-             _text_blob("The API rate limit is 5000 requests per hour per key."),
-             "What is the API rate limit per hour?", "5000 requests per hour"),
-        Case("text-deploykey", "text",
-             _text_blob("The deployment key rotates automatically every 24 hours."),
-             "How often does the deployment key rotate?", "every 24 hours"),
-        Case("text-port", "text",
-             _text_blob("The metrics exporter listens on port 9187 by default."),
-             "Which port does the metrics exporter listen on?", "port 9187"),
-    ]
-
-    # HTML
-    cases += [
-        Case("html-capital", "html",
-             _html_blob("The capital of the Republic of Auren is Mateldorf."),
-             "What is the capital of the Republic of Auren?", "Mateldorf"),
-        Case("html-ceo", "html",
-             _html_blob("Acme Corp's chief executive officer is Dana Whitlock."),
-             "Who is Acme Corp's chief executive officer?", "Dana Whitlock"),
-        Case("html-version", "html",
-             _html_blob("The current stable release is version 12.4.1."),
-             "What is the current stable release version?", "12.4.1"),
-    ]
-
-    # JSON
-    cases += [
-        Case("json-refund", "json",
-             _json_blob("refund issued to customer 4417 for amount 250"),
-             "Which note mentions a refund issued to a customer?",
-             "refund issued to customer 4417"),
-        Case("json-fraud", "json",
-             _json_blob("flagged for manual fraud review by analyst kim"),
-             "Which note was flagged for manual fraud review?",
-             "flagged for manual fraud review"),
-        Case("json-chargeback", "json",
-             _json_blob("chargeback disputed under reason code 4853"),
-             "Which note mentions a chargeback dispute reason code?",
-             "chargeback disputed under reason code 4853"),
-    ]
-
-    # Logs
-    cases += [
-        Case("logs-disk", "logs",
-             _logs_blob("disk usage 98 percent on /var/data writes failing"),
-             "What error mentions disk usage on /var/data?",
-             "disk usage 98 percent on /var/data"),
-        Case("logs-oom", "logs",
-             _logs_blob("out of memory killing process pid 8123"),
-             "What error mentions an out of memory condition?",
-             "out of memory killing process pid 8123"),
-        Case("logs-cert", "logs",
-             _logs_blob("tls certificate expired for host api.example.com"),
-             "What error mentions an expired tls certificate?",
-             "tls certificate expired for host api.example.com"),
-    ]
-
-    # Tabular
-    cases += [
-        Case("csv-compliance", "tabular",
-             _csv_blob("flagged for compliance review under sanctions list"),
-             "Which note was flagged for compliance review?",
-             "flagged for compliance review under sanctions list"),
-        Case("csv-vip", "tabular",
-             _csv_blob("vip customer requires priority handling tier gold"),
-             "Which note mentions a vip customer requiring priority handling?",
-             "vip customer requires priority handling"),
-        Case("csv-refund", "tabular",
-             _csv_blob("partial refund approved by supervisor delgado"),
-             "Which note mentions a partial refund approval?",
-             "partial refund approved by supervisor delgado"),
-        Case("csv-duplicate", "tabular",
-             _csv_blob("duplicate transaction detected and voided automatically"),
-             "Which note mentions a duplicate transaction?",
-             "duplicate transaction detected and voided"),
-    ]
-
+    for i, (ctype, needle, question, gold) in enumerate(_SPECS):
+        idx = counters.get(ctype, 0) + 1
+        counters[ctype] = idx
+        # vary the needle position across cases so it isn't always mid-document
+        blob = _BUILDERS[ctype](needle, at=29 + i * 13)
+        cases.append(Case(f"{ctype}-{idx:02d}", ctype, blob, question, gold))
     return cases

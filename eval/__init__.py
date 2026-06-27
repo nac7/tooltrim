@@ -25,6 +25,7 @@ from .harness import (
     to_markdown,
 )
 from .judge import matches
+from .metrics import wilson_ci
 from .models import CachedModel, QAModel, get_model
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "CachedModel",
     "get_model",
     "matches",
+    "wilson_ci",
     "BudgetResult",
     "CaseRecord",
     "evaluate",

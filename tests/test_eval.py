@@ -4,11 +4,34 @@ from eval.models import KeywordModel
 
 def test_dataset_shape():
     cases = default_cases()
-    assert len(cases) >= 15
+    assert len(cases) >= 45
     types = {c.content_type for c in cases}
     assert types == {"text", "html", "json", "logs", "tabular"}
+    # ids unique, every type well represented
+    assert len({c.id for c in cases}) == len(cases)
+    for t in types:
+        assert sum(1 for c in cases if c.content_type == t) >= 8
     for c in cases:
         assert c.tool_output and c.question and c.gold
+
+
+def test_wilson_ci():
+    from eval import wilson_ci
+
+    assert wilson_ci(0, 0) == (0.0, 0.0)
+    lo, hi = wilson_ci(0, 10)
+    assert lo == 0.0 and 0.0 < hi < 0.35
+    lo, hi = wilson_ci(10, 10)
+    assert hi == 1.0 and 0.6 < lo < 1.0
+    lo, hi = wilson_ci(8, 16)
+    assert lo < 0.5 < hi and 0.24 < lo < 0.30 and 0.70 < hi < 0.76
+
+
+def test_results_carry_confidence_intervals():
+    full, results = evaluate(KeywordModel(), budgets=(256,))
+    assert 0.0 <= full.acc_lo <= full.accuracy <= full.acc_hi <= 1.0
+    r = results[0]
+    assert 0.0 <= r.acc_lo <= r.accuracy <= r.acc_hi <= 1.0
 
 
 def test_judge_matches():
@@ -82,5 +105,8 @@ def test_export_markdown_and_csv():
     csv = to_csv("offline", full, results)
     assert "Faithfulness under compression" in md
     assert "| budget |" in md
-    assert csv.splitlines()[0].startswith("model,budget,comp_tokens")
+    assert "95% CI" in md
+    header = csv.splitlines()[0]
+    assert header.startswith("model,budget,comp_tokens")
+    assert "acc_ci_lo" in header and "acc_ci_hi" in header
     assert "offline,256," in csv

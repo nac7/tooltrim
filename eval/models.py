@@ -66,7 +66,11 @@ class KeywordModel:
         if not any(s > 0 for s in scores):
             return windows[0]
         best = max(range(len(windows)), key=lambda i: scores[i])
-        return windows[best]
+        # Return a small neighborhood, not one fixed window: a value can land in
+        # the window adjacent to the one carrying the query terms (overlap split).
+        lo = max(0, best - 1)
+        hi = min(len(windows), best + 2)
+        return " ".join(windows[lo:hi])
 
 
 class ClaudeModel:

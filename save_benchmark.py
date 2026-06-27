@@ -108,12 +108,14 @@ def main() -> None:
 
 def _full_dict(f: FullResult) -> dict:
     return {"accuracy": f.accuracy, "correct": f.correct, "n": f.n,
-            "avg_tokens": f.avg_tokens}
+            "avg_tokens": f.avg_tokens,
+            "accuracy_ci95": [f.acc_lo, f.acc_hi]}
 
 
 def _budget_dict(r: BudgetResult) -> dict:
     return {"budget": r.budget, "avg_tokens": r.avg_tokens,
             "saved_ratio": r.saved_ratio, "accuracy": r.accuracy,
+            "accuracy_ci95": [r.acc_lo, r.acc_hi],
             "correct": r.correct, "n": r.n, "retention": r.retention}
 
 
