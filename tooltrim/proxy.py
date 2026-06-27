@@ -79,17 +79,21 @@ def compress_messages(
 
 
 def transform_request_body(raw: bytes, compressor: ToolCompressor) -> Tuple[bytes, CompressionStats]:
-    """Compress tool messages inside a raw chat-completions JSON body."""
+    """Compress tool messages inside a raw chat-completions JSON body.
+
+    Fails open: any error (non-JSON body, unexpected shape, compressor failure)
+    returns the original bytes untouched so a production call is never broken.
+    """
     try:
         payload = json.loads(raw)
+        messages = payload.get("messages")
+        if not isinstance(messages, list):
+            return raw, CompressionStats()
+        new_messages, stats = compress_messages(messages, compressor)
+        payload["messages"] = new_messages
+        return json.dumps(payload).encode("utf-8"), stats
     except Exception:
-        return raw, CompressionStats()  # not JSON we understand — pass through
-    messages = payload.get("messages")
-    if not isinstance(messages, list):
         return raw, CompressionStats()
-    new_messages, stats = compress_messages(messages, compressor)
-    payload["messages"] = new_messages
-    return json.dumps(payload).encode("utf-8"), stats
 
 
 # --- HTTP server ---------------------------------------------------------------

@@ -23,6 +23,12 @@ def web_fetch(url: str) -> str:
 - **Content-aware.** Separate compressors for HTML, JSON, tabular data, logs,
   and free text. Optionally **query-aware** (BM25) to keep what the agent is
   actually looking for.
+- **Faithfulness-tested.** A built-in harness measures whether the model still
+  answers correctly on compressed output (with Wilson 95% CIs) — not just how
+  many tokens you saved.
+- **Deploy as a proxy.** An OpenAI-compatible compression proxy trims
+  `role:"tool"` messages in flight, so any app/language adopts it with zero code
+  changes — just a `base_url`.
 
 ---
 
@@ -57,6 +63,37 @@ Reproduce with [`benchmark.py`](benchmark.py).
 **39,575 → 1,111 tokens — a 35.6× smaller context, with the relevant fact kept
 in every case.** (HTML/text collapse to the matching passage when the query
 pinpoints it; structured types keep a representative, schema-preserving sample.)
+
+## Does compression lose information? (it can *help*)
+
+Throwing away 99% of the tokens is only safe if the model still answers
+correctly. We measure that directly: for **50 curated `(tool output, question,
+gold answer)` cases** across all five content types, a model is asked the
+question twice — once on the **full** output, once on the **tooltrim-compressed**
+output — and accuracy is reported with **Wilson 95% confidence intervals**.
+Reproduce with [`run_faithfulness.py`](run_faithfulness.py) — it runs **offline
+by default (no API key)** and has adapters for Claude / OpenAI / Groq / Ollama.
+
+On a small local model (`llama3.1:8b`), compression doesn't just preserve
+accuracy — it **improves** it, because the model is no longer distracted by
+thousands of tokens of noise:
+
+| condition | tokens/case | accuracy | 95% CI |
+|---|---:|---:|---:|
+| full context | 6,587 | 10/50 (20%) | [11–33%] |
+| **compressed @128** | **76 (−98.8%)** | **37/50 (74%)** | **[60–84%]** |
+| compressed @256 | 159 (−97.6%) | 34/50 (68%) | [54–79%] |
+| compressed @400 | 217 (−96.7%) | 35/50 (70%) | [56–81%] |
+
+The intervals don't overlap — at n=50 this is a **significant** improvement, not
+noise. Full provenance and per-case answers are saved as a citable artifact under
+[`benchmarks/runs/`](benchmarks/runs/).
+
+*Stated plainly:* this is one small 8B model. A frontier long-context model
+handles the full context far better, so its baseline is higher and the accuracy
+*uplift* shrinks — but the token/cost savings remain. The uplift is largest for
+smaller/cheaper models and longer contexts; n=50 is a pilot, which is why the CIs
+are reported.
 
 ## Install
 
@@ -144,6 +181,26 @@ distiller = LLMDistiller(complete, max_tokens=300)
 summary = distiller.compress(huge_output, query="refund status")
 ```
 
+### 5. Or run it as a proxy — zero code changes
+
+Point any OpenAI-compatible client at the tooltrim proxy; every `role:"tool"` /
+`role:"function"` message is compressed (using the latest user message as the
+relevance query) before being forwarded upstream. Works for any language or
+framework — you only change `base_url`.
+
+```bash
+python run_proxy.py --upstream https://api.openai.com/v1   # any OpenAI-compatible endpoint
+```
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://127.0.0.1:8800/v1", api_key="<upstream key>")
+# use the API normally — bloated tool results are trimmed in flight
+```
+
+The proxy is stdlib-only and **fails open**: if anything goes wrong it forwards
+the original request untouched, so it never breaks a production call.
+
 ## How it works
 
 1. **Pass-through** if the output already fits the budget (zero overhead).
@@ -176,8 +233,12 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic core, full test suite, reproducible benchmark.
-Roadmap: streaming compression, embedding-based relevance, per-tool config
-presets, native LangChain/LlamaIndex wrappers.
+v0.1 — deterministic zero-dependency core, 47-test suite, reproducible token +
+**faithfulness** benchmarks (with Wilson CIs), an OpenAI-compatible **proxy**, and
+citable run artifacts under [`benchmarks/`](benchmarks/).
+
+Roadmap: frontier-model faithfulness runs, embedding-based relevance, streaming
+compression, a pluggable Redis/S3 expand-store for horizontal scale, and native
+LangChain / LlamaIndex / OpenAI-Agents wrappers.
 
 Contributions and benchmark cases welcome. MIT licensed.
