@@ -75,7 +75,8 @@ def main() -> None:
         "tooltrim_version": tooltrim.__version__,
         "run_utc": _dt.datetime.now(_dt.timezone.utc).isoformat(),
         "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        # tracked-only: did the committed code change? (untracked artifacts ignored)
+        "git_dirty": bool(_git("status", "--porcelain", "--untracked-files=no")),
         "python": sys.version.split()[0],
         "platform": platform.platform(),
         "exact_tiktoken": using_exact_counts(),
