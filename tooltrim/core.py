@@ -1,0 +1,144 @@
+"""Core API: :class:`ToolCompressor` and :class:`CompressionResult`."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
+
+from .detect import detect_type
+from .store import OutputStore
+from .tokens import count_tokens
+from .compressors import html as _html
+from .compressors import json_ as _json
+from .compressors import logs as _logs
+from .compressors import tabular as _tab
+from .compressors import text as _text
+
+_COMPRESSORS = {
+    "html": _html.compress,
+    "json": _json.compress,
+    "tabular": _tab.compress,
+    "logs": _logs.compress,
+    "text": _text.compress,
+}
+
+
+@dataclass
+class CompressionResult:
+    """Outcome of compressing a single tool output."""
+
+    text: str
+    content_type: str
+    original_tokens: int
+    compressed_tokens: int
+    ref: Optional[str] = None
+    compressed: bool = True
+
+    @property
+    def saved_tokens(self) -> int:
+        return max(0, self.original_tokens - self.compressed_tokens)
+
+    @property
+    def saved_ratio(self) -> float:
+        if self.original_tokens <= 0:
+            return 0.0
+        return self.saved_tokens / self.original_tokens
+
+    def __str__(self) -> str:  # what an agent actually consumes
+        return self.text
+
+
+def _coerce(output: Any) -> str:
+    if isinstance(output, str):
+        return output
+    if isinstance(output, bytes):
+        return output.decode("utf-8", "replace")
+    try:
+        import json
+
+        return json.dumps(output, ensure_ascii=False, default=str)
+    except Exception:
+        return str(output)
+
+
+class ToolCompressor:
+    """Compress tool outputs to fit a token budget, keeping the full output retrievable.
+
+    Args:
+        max_tokens: Target budget for the compressed output.
+        store: Where full outputs are stashed for expand-on-demand. Pass ``None``
+            to disable stashing (no refs, lower memory).
+        add_footer: Append a one-line note with savings + the expand ref.
+        footer_template: Customize the footer. Receives ``saved``, ``original``,
+            ``compressed``, ``ref`` as ``str.format`` keys.
+    """
+
+    def __init__(
+        self,
+        max_tokens: int = 512,
+        *,
+        store: Optional[OutputStore] = "default",  # type: ignore[assignment]
+        add_footer: bool = True,
+        footer_template: Optional[str] = None,
+    ) -> None:
+        self.max_tokens = max_tokens
+        if store == "default":
+            store = OutputStore()
+        self.store: Optional[OutputStore] = store
+        self.add_footer = add_footer
+        self.footer_template = footer_template or (
+            "\n\n[tooltrim: compressed {original}->{compressed} tokens "
+            "(saved {saved}); full output ref={ref}]"
+        )
+
+    def compress(
+        self,
+        output: Any,
+        *,
+        query: Optional[str] = None,
+        content_type: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+    ) -> CompressionResult:
+        text = _coerce(output)
+        original = count_tokens(text)
+        budget = max_tokens if max_tokens is not None else self.max_tokens
+
+        # Already within budget: pass through untouched (no ref, no footer).
+        if original <= budget:
+            ctype = content_type or detect_type(text)
+            return CompressionResult(text, ctype, original, original,
+                                     ref=None, compressed=False)
+
+        ctype = content_type or detect_type(text)
+        compressor = _COMPRESSORS.get(ctype, _text.compress)
+        # Leave headroom for the footer line.
+        body_budget = max(16, budget - (24 if self.add_footer else 0))
+        body = compressor(text, query, body_budget)
+
+        ref = self.store.put(text) if self.store is not None else None
+
+        body_tokens = count_tokens(body)
+        final = body
+        if self.add_footer and ref is not None:
+            final = body + self.footer_template.format(
+                original=original,
+                compressed=body_tokens,
+                saved=max(0, original - body_tokens),
+                ref=ref,
+            )
+
+        return CompressionResult(
+            text=final,
+            content_type=ctype,
+            original_tokens=original,
+            compressed_tokens=count_tokens(final),
+            ref=ref,
+            compressed=True,
+        )
+
+    def expand(self, ref: str, *, start: int = 0,
+               length: Optional[int] = None) -> Optional[str]:
+        """Retrieve the full (or sliced) original output behind ``ref``."""
+        if self.store is None:
+            return None
+        return self.store.expand(ref, start=start, length=length)
