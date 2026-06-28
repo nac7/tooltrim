@@ -60,17 +60,24 @@ class KeywordModel:
 
     name = "offline"
 
+    def __init__(self, top_k: int = 3):
+        self.top_k = top_k
+
     def answer(self, question: str, context: str) -> str:
         windows = _windows(context)
         scores = score_chunks(windows, question)
         if not any(s > 0 for s in scores):
             return windows[0]
-        best = max(range(len(windows)), key=lambda i: scores[i])
-        # Return a small neighborhood, not one fixed window: a value can land in
-        # the window adjacent to the one carrying the query terms (overlap split).
-        lo = max(0, best - 1)
-        hi = min(len(windows), best + 2)
-        return " ".join(windows[lo:hi])
+        # Return the top-k relevant regions (each with a neighbor for context),
+        # merged in original order. top-k lets multi-fact answers surface facts
+        # that live in different parts of the document.
+        ranked = sorted(range(len(windows)), key=lambda i: scores[i], reverse=True)
+        picked = [i for i in ranked if scores[i] > 0][: self.top_k]
+        keep: set = set()
+        for i in picked:
+            for j in range(max(0, i - 1), min(len(windows), i + 2)):
+                keep.add(j)
+        return " ".join(windows[i] for i in sorted(keep))
 
 
 class ClaudeModel:

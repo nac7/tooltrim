@@ -31,6 +31,9 @@ class Case:
     tool_output: str
     question: str
     gold: str
+    category: str = "single"          # single | multi | distractor
+    all_of: tuple = ()                # extra facts that must ALSO be recovered
+    must_not: tuple = ()              # distractor values that must NOT appear
 
 
 def _sentence(n: int = 12) -> str:
@@ -88,6 +91,30 @@ def _csv_blob(cell: str, n: int = 500, at: int = 333) -> str:
         note = cell if i == at % n else _sentence(4)
         rows.append(f"{i},{_RNG.choice(['us','eu','apac'])},ok,{i*3}.50,{note}")
     return "\n".join(rows)
+
+
+# --- multi-needle embedders (facts placed far apart) ---------------------------
+
+def _text_blob_multi(needles: List[str], n: int = 160, base: int = 20) -> str:
+    paras = [_sentence(28) for _ in range(n)]
+    step = max(1, n // (len(needles) + 1))
+    for k, nd in enumerate(needles):
+        paras[(base + (k + 1) * step) % n] = nd
+    return "\n\n".join(paras)
+
+
+def _json_blob_multi(notes: List[str], n: int = 320, base: int = 30) -> str:
+    step = max(1, n // (len(notes) + 1))
+    targets = {(base + (k + 1) * step) % n: notes[k] for k in range(len(notes))}
+    items = []
+    for i in range(n):
+        items.append({
+            "id": i,
+            "status": _RNG.choice(["ok", "pending", "failed"]),
+            "amount": round(_RNG.uniform(1, 9999), 2),
+            "note": targets.get(i, _sentence(8)),
+        })
+    return json.dumps({"page": 1, "total": n, "results": items})
 
 
 # --- declarative case specs ----------------------------------------------------
@@ -245,15 +272,88 @@ _BUILDERS = {
     "tabular": _csv_blob,
 }
 
+# Multi-fact: the answer needs TWO facts placed far apart — compression must keep
+# both relevant regions, not just the single best-scoring one.
+# (content_type, [needle1, needle2], question, [gold1, gold2])
+_MULTI_SPECS = [
+    ("text", ["The API rate limit is 5000 requests per hour.",
+              "The request timeout is set to 30 seconds."],
+     "What are the API rate limit and the request timeout?",
+     ["5000 requests per hour", "30 seconds"]),
+    ("text", ["The primary datacenter region is us-east-2.",
+              "The disaster-recovery region is eu-west-1."],
+     "What are the primary datacenter region and the disaster-recovery region?",
+     ["us-east-2", "eu-west-1"]),
+    ("text", ["The free tier allows 1000 monthly active users.",
+              "The pro tier allows 50000 monthly active users."],
+     "How many monthly active users do the free tier and the pro tier allow?",
+     ["1000 monthly active users", "50000 monthly active users"]),
+    ("json", ["refund issued to customer 4417 for amount 250",
+              "chargeback opened by customer 4417 reason fraud"],
+     "Which two notes both involve customer 4417 (a refund and a chargeback)?",
+     ["refund issued to customer 4417", "chargeback opened by customer 4417"]),
+    ("json", ["order 8801 shipped via carrier dhl tracking 55a",
+              "order 8801 delivered and signed by recipient garza"],
+     "What are the two notes about order 8801 (shipment and delivery)?",
+     ["order 8801 shipped via carrier dhl", "order 8801 delivered and signed"]),
+    ("text", ["The webhook signing secret begins with whsec_77.",
+              "The webhook endpoint path is /v2/events/ingest."],
+     "What are the webhook signing secret prefix and the webhook endpoint path?",
+     ["whsec_77", "/v2/events/ingest"]),
+]
+
+# Distractor: a similar-looking but wrong value sits far from the right one; the
+# question disambiguates. Good compression keeps the right fact and drops the trap.
+# (content_type, gold_needle, distractor_needle, question, gold, must_not)
+_DISTRACTOR_SPECS = [
+    ("text", "The current production API key prefix is prod_9f2.",
+     "The deprecated sandbox API key prefix was sand_1a0.",
+     "What is the CURRENT PRODUCTION API key prefix?", "prod_9f2", "sand_1a0"),
+    ("text", "The new mailing address is 88 Harbor Road, Suite 5.",
+     "The old mailing address was 12 Elm Street, Unit 3.",
+     "What is the NEW mailing address?", "88 Harbor Road", "12 Elm Street"),
+    ("text", "After the migration the default database port is 6543.",
+     "Before the migration the default database port was 5432.",
+     "What is the default database port AFTER the migration?", "6543", "5432"),
+    ("json", "approved limit for premium account is 25000 dollars",
+     "approved limit for trial account is 500 dollars",
+     "What is the approved limit for the PREMIUM account?",
+     "25000 dollars", "500 dollars"),
+    ("text", "The replacement contact for escalations is Priya Nandakumar.",
+     "The former contact for escalations was Tomas Errico.",
+     "Who is the REPLACEMENT escalation contact?",
+     "Priya Nandakumar", "Tomas Errico"),
+    ("json", "active promo code this quarter is FALL40 at checkout",
+     "expired promo code last quarter was SUMMER15 at checkout",
+     "What is the ACTIVE promo code this quarter?", "FALL40", "SUMMER15"),
+]
+
 
 def default_cases() -> List[Case]:
-    """Return the curated faithfulness cases (50 across 5 content types)."""
+    """Curated faithfulness cases: single-fact + multi-fact + distractor."""
     counters: dict = {}
     cases: List[Case] = []
+
     for i, (ctype, needle, question, gold) in enumerate(_SPECS):
         idx = counters.get(ctype, 0) + 1
         counters[ctype] = idx
-        # vary the needle position across cases so it isn't always mid-document
         blob = _BUILDERS[ctype](needle, at=29 + i * 13)
         cases.append(Case(f"{ctype}-{idx:02d}", ctype, blob, question, gold))
+
+    for i, (ctype, needles, question, golds) in enumerate(_MULTI_SPECS):
+        builder = _text_blob_multi if ctype == "text" else _json_blob_multi
+        blob = builder(needles, base=20 + i * 11)
+        cases.append(Case(f"multi-{i+1:02d}", ctype, blob, question,
+                          gold=golds[0], category="multi",
+                          all_of=tuple(golds[1:])))
+
+    for i, (ctype, gold_n, distractor_n, question, gold, must_not) in \
+            enumerate(_DISTRACTOR_SPECS):
+        builder = _text_blob_multi if ctype == "text" else _json_blob_multi
+        # place the correct fact and the distractor far apart
+        blob = builder([gold_n, distractor_n], base=15 + i * 9)
+        cases.append(Case(f"distractor-{i+1:02d}", ctype, blob, question,
+                          gold=gold, category="distractor",
+                          must_not=(must_not,)))
+
     return cases

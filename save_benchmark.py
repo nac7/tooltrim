@@ -30,7 +30,7 @@ from eval import (
     to_csv,
     to_markdown,
 )
-from eval.harness import BudgetResult, FullResult
+from eval.harness import BudgetResult, FullResult, category_breakdown
 from tooltrim import using_exact_counts
 
 
@@ -67,8 +67,10 @@ def main() -> None:
     os.makedirs(out_dir, exist_ok=True)
 
     type_counts: dict = {}
+    cat_counts: dict = {}
     for c in cases:
         type_counts[c.content_type] = type_counts.get(c.content_type, 0) + 1
+        cat_counts[c.category] = cat_counts.get(c.category, 0) + 1
 
     record = {
         "tool": "tooltrim",
@@ -85,11 +87,14 @@ def main() -> None:
         "dataset": {
             "n": len(cases),
             "types": type_counts,
+            "categories": cat_counts,
             "case_ids": [c.id for c in cases],
         },
         "budgets": list(budgets),
         "full": _full_dict(full),
         "budget_results": [_budget_dict(r) for r in results],
+        "category_breakdown": _jsonable_breakdown(
+            category_breakdown(records, budgets)),
         "cases": [_case_dict(r) for r in records],
     }
 
@@ -119,10 +124,19 @@ def _budget_dict(r: BudgetResult) -> dict:
             "correct": r.correct, "n": r.n, "retention": r.retention}
 
 
+def _jsonable_breakdown(bd: dict) -> dict:
+    # convert int budget keys -> str for JSON
+    out = {}
+    for cat, e in bd.items():
+        out[cat] = {**e, "per_budget": {str(b): v for b, v in e["per_budget"].items()}}
+    return out
+
+
 def _case_dict(rec) -> dict:
     return {
         "id": rec.id,
         "content_type": rec.content_type,
+        "category": rec.category,
         "question": rec.question,
         "gold": rec.gold,
         "full": {"correct": rec.full_correct, "tokens": rec.full_tokens,
@@ -151,7 +165,25 @@ def _report_md(record: dict, full: FullResult, results) -> str:
     if record["model"]["model_id"]:
         head += f" --model-id {record['model']['model_id']}"
     head += f" --budgets {','.join(map(str, record['budgets']))}`\n\n"
-    return head + to_markdown(m, full, results)
+
+    bd = record.get("category_breakdown", {})
+    cat_md = ""
+    if bd:
+        budgets = record["budgets"]
+        cat_md = "\n### By category (full vs best budget)\n\n"
+        cat_md += "| category | n | full acc | " + \
+                  " | ".join(f"@{b}" for b in budgets) + " |\n"
+        cat_md += "|---|---:|---:|" + "---:|" * len(budgets) + "\n"
+        for cat, e in bd.items():
+            row = (f"| {cat} | {e['n']} | {e['full_accuracy']*100:.0f}% | " +
+                   " | ".join(f"{e['per_budget'][str(b)]['accuracy']*100:.0f}%"
+                             for b in budgets) + " |")
+            cat_md += row + "\n"
+        cat_md += ("\n*Distractor cases require reasoning (pick the current value, "
+                   "not the deprecated one); a pure retriever scores ~0 on them by "
+                   "design, so they separate strong models from weak ones.*\n")
+
+    return head + to_markdown(m, full, results) + "\n" + cat_md
 
 
 if __name__ == "__main__":

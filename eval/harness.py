@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Sequence
 from tooltrim import ToolCompressor, count_tokens, using_exact_counts
 
 from .dataset import Case, default_cases
-from .judge import matches
+from .judge import passed
 from .metrics import fmt_ci, wilson_ci
 from .models import QAModel
 
@@ -41,7 +41,8 @@ def _full_pass(cases: Sequence[Case], model: QAModel) -> FullResult:
     tokens = 0
     for c in cases:
         tokens += count_tokens(c.tool_output)
-        if matches(model.answer(c.question, c.tool_output), c.gold):
+        if passed(model.answer(c.question, c.tool_output),
+                  c.gold, c.all_of, c.must_not):
             correct += 1
     n = len(cases)
     lo, hi = wilson_ci(correct, n)
@@ -57,7 +58,8 @@ def _budget_pass(cases: Sequence[Case], model: QAModel, budget: int,
     for c in cases:
         res = tc.compress(c.tool_output, query=c.question)
         tokens += res.compressed_tokens
-        if matches(model.answer(c.question, res.text), c.gold):
+        if passed(model.answer(c.question, res.text),
+                  c.gold, c.all_of, c.must_not):
             correct += 1
     n = len(cases)
     acc = correct / n if n else 0.0
@@ -91,6 +93,7 @@ class CaseRecord:
 
     id: str
     content_type: str
+    category: str
     question: str
     gold: str
     full_correct: bool
@@ -114,11 +117,11 @@ def evaluate_detailed(model: QAModel, *, cases: Sequence[Case] | None = None,
     for c in cases:
         ans = model.answer(c.question, c.tool_output)
         tok = count_tokens(c.tool_output)
-        ok = matches(ans, c.gold)
+        ok = passed(ans, c.gold, c.all_of, c.must_not)
         full_correct += int(ok)
         full_tokens += tok
-        records.append(CaseRecord(c.id, c.content_type, c.question, c.gold,
-                                  ok, tok, ans))
+        records.append(CaseRecord(c.id, c.content_type, c.category, c.question,
+                                  c.gold, ok, tok, ans))
     f_lo, f_hi = wilson_ci(full_correct, n)
     full = FullResult(full_correct / n if n else 0.0, full_correct, n,
                       full_tokens / n if n else 0.0, f_lo, f_hi)
@@ -132,7 +135,7 @@ def evaluate_detailed(model: QAModel, *, cases: Sequence[Case] | None = None,
         for c in cases:
             res = tc.compress(c.tool_output, query=c.question)
             ans = model.answer(c.question, res.text)
-            ok = matches(ans, c.gold)
+            ok = passed(ans, c.gold, c.all_of, c.must_not)
             correct += int(ok)
             tokens += res.compressed_tokens
             by_id[c.id].per_budget[b] = {
@@ -146,6 +149,24 @@ def evaluate_detailed(model: QAModel, *, cases: Sequence[Case] | None = None,
             retention=(acc / full.accuracy) if full.accuracy else 0.0,
             acc_lo=lo, acc_hi=hi))
     return full, results, records
+
+
+def category_breakdown(records: List[CaseRecord],
+                       budgets: Sequence[int]) -> Dict[str, Any]:
+    """Per-category full + per-budget accuracy (single / multi / distractor)."""
+    out: Dict[str, Any] = {}
+    for cat in sorted({r.category for r in records}):
+        rs = [r for r in records if r.category == cat]
+        n = len(rs)
+        full_c = sum(int(r.full_correct) for r in rs)
+        per = {}
+        for b in budgets:
+            c = sum(1 for r in rs if r.per_budget.get(b, {}).get("correct"))
+            per[b] = {"correct": c, "n": n, "accuracy": c / n if n else 0.0}
+        out[cat] = {"n": n, "full_correct": full_c,
+                    "full_accuracy": full_c / n if n else 0.0,
+                    "per_budget": per}
+    return out
 
 
 def format_report(model_name: str, full: FullResult,

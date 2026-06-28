@@ -27,3 +27,18 @@ def matches(answer: str, gold: str, *, threshold: float = 0.7) -> bool:
     answer_tokens = set(a.split())
     hits = sum(1 for t in gold_tokens if t in answer_tokens)
     return hits / len(gold_tokens) >= threshold
+
+
+def passed(answer: str, gold: str, all_of=(), must_not=()) -> bool:
+    """Full case verdict: gold present, every all_of present, no must_not present.
+
+    Covers single-fact (gold only), multi-fact (all_of), and distractor
+    (must_not) cases with one predicate.
+    """
+    if not matches(answer, gold):
+        return False
+    if not all(matches(answer, g) for g in all_of):
+        return False
+    if any(matches(answer, m) for m in must_not):
+        return False
+    return True

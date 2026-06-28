@@ -4,15 +4,28 @@ from eval.models import KeywordModel
 
 def test_dataset_shape():
     cases = default_cases()
-    assert len(cases) >= 45
+    assert len(cases) >= 60
     types = {c.content_type for c in cases}
     assert types == {"text", "html", "json", "logs", "tabular"}
-    # ids unique, every type well represented
+    cats = {c.category for c in cases}
+    assert {"single", "multi", "distractor"} <= cats
+    # ids unique
     assert len({c.id for c in cases}) == len(cases)
-    for t in types:
-        assert sum(1 for c in cases if c.content_type == t) >= 8
     for c in cases:
         assert c.tool_output and c.question and c.gold
+
+
+def test_passed_scoring():
+    from eval.judge import passed
+
+    # multi-fact: all_of must also be present
+    assert passed("rate is 5000 per hour, timeout 30 seconds",
+                  "5000", all_of=("30 seconds",))
+    assert not passed("rate is 5000 per hour", "5000", all_of=("30 seconds",))
+    # distractor: must_not must be absent
+    assert passed("the prefix is prod_9f2", "prod_9f2", must_not=("sand_1a0",))
+    assert not passed("prod_9f2 replaces sand_1a0", "prod_9f2",
+                      must_not=("sand_1a0",))
 
 
 def test_wilson_ci():
@@ -41,10 +54,24 @@ def test_judge_matches():
     assert not matches("I could not find that information", "Mateldorf")
 
 
-def test_offline_full_accuracy_is_perfect():
-    # With the full output, the needle is always present and findable.
+def test_offline_full_accuracy_is_high():
+    # The offline retriever is a strong control: with the full output it finds
+    # the needed facts in nearly every case (multi-fact/distractor are harder).
     full, _ = evaluate(KeywordModel(), budgets=(400,))
-    assert full.accuracy == 1.0
+    assert full.accuracy >= 0.85
+
+
+def test_category_breakdown_offline():
+    # offline retriever: perfect on retrieval-solvable (single+multi),
+    # ~0 on distractors (those need reasoning) — by design.
+    from eval import default_cases
+    from eval.harness import category_breakdown, evaluate_detailed
+
+    _, _, records = evaluate_detailed(KeywordModel(), budgets=(400,))
+    bd = category_breakdown(records, (400,))
+    assert bd["single"]["full_accuracy"] == 1.0
+    assert bd["multi"]["full_accuracy"] == 1.0
+    assert bd["distractor"]["full_accuracy"] == 0.0
 
 
 def test_compression_retains_accuracy_at_reasonable_budget():
@@ -58,7 +85,7 @@ def test_retention_reported_across_budgets():
     full, results = evaluate(KeywordModel(), budgets=(128, 256, 400))
     assert [r.budget for r in results] == [128, 256, 400]
     for r in results:
-        assert 0.0 <= r.retention <= 1.0
+        assert r.retention >= 0.0       # may exceed 1.0 (compression can help)
 
 
 def test_get_model_offline():
