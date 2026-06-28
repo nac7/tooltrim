@@ -71,3 +71,41 @@ def test_store_disabled_yields_no_ref():
 def test_returns_compression_result_type():
     tc = ToolCompressor()
     assert isinstance(tc.compress("hi"), CompressionResult)
+
+
+def test_expand_tool_spec_styles():
+    tc = ToolCompressor()
+    openai = tc.expand_tool_spec(style="openai")
+    assert openai["type"] == "function"
+    assert openai["function"]["name"] == tc.EXPAND_TOOL_NAME
+    assert "ref" in openai["function"]["parameters"]["properties"]
+
+    anthro = tc.expand_tool_spec(style="anthropic")
+    assert anthro["name"] == tc.EXPAND_TOOL_NAME
+    assert "input_schema" in anthro
+
+    raw = tc.expand_tool_spec(style="raw")
+    assert raw["name"] == tc.EXPAND_TOOL_NAME and "schema" in raw
+
+
+def test_handle_expand_returns_full_output():
+    tc = ToolCompressor(max_tokens=120)
+    original = _big_json(80)  # > budget (so it compresses) but < one page
+    res = tc.compress(original)
+    assert len(original) < 8000
+    assert tc.handle_expand(res.ref) == original
+
+
+def test_handle_expand_paging():
+    tc = ToolCompressor(max_tokens=120)
+    original = _big_json(2000)
+    res = tc.compress(original)
+    page = tc.handle_expand(res.ref, page_chars=500)
+    assert page.startswith(original[:500])
+    assert tc.EXPAND_TOOL_NAME in page and "start=500" in page
+
+
+def test_handle_expand_unknown_ref():
+    tc = ToolCompressor(max_tokens=120)
+    msg = tc.handle_expand("deadbeef")
+    assert "no stored output" in msg and "deadbeef" in msg

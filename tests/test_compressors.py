@@ -55,3 +55,26 @@ def test_text_query_extraction():
     paras[42] = "The launch code is 1234-ALPHA."
     out = text.compress("\n\n".join(paras), query="launch code", max_tokens=40)
     assert "1234-ALPHA" in out
+
+
+def test_neighbor_context_included():
+    from tooltrim.compressors._budget import fit_chunks
+
+    chunks = [f"filler clause about gardening number {i}" for i in range(60)]
+    chunks[30] = "the access code is ALPHA7"
+    chunks[31] = "this value expires at NEIGHBORWORD midnight"
+    # with neighbor context, the adjacent line is pulled in
+    out = fit_chunks(chunks, "access code", max_tokens=60, neighbor=1)
+    assert "ALPHA7" in out and "NEIGHBORWORD" in out
+    # with neighbor disabled, only the matching line is kept
+    out0 = fit_chunks(chunks, "access code", max_tokens=60, neighbor=0)
+    assert "ALPHA7" in out0 and "NEIGHBORWORD" not in out0
+
+
+def test_logs_keeps_context_around_error():
+    lines = [f"2026-06-27 INFO step {i} completed ok" for i in range(200)]
+    lines[100] = "2026-06-27 INFO opening file payments.dat for write"
+    lines[101] = "2026-06-27 ERROR disk full on /data write aborted"
+    out = logs.compress("\n".join(lines), query=None, max_tokens=120)
+    assert "ERROR disk full" in out
+    assert "opening file payments.dat" in out  # the preceding context line

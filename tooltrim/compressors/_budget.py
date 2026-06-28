@@ -24,11 +24,15 @@ def fit_chunks(
     chunks: Sequence[str],
     query: str | None,
     max_tokens: int,
+    *,
+    neighbor: int = 1,
 ) -> str:
     """Select chunks to fit ``max_tokens``.
 
-    With a query: keep the highest-scoring chunks (BM25), then re-emit them in
-    their original order with elision markers where content was dropped.
+    With a query: keep the highest-scoring chunks (BM25), then — budget
+    permitting — pull in up to ``neighbor`` adjacent chunks on each side of the
+    best matches so the model gets context, not just the bare matching line.
+    Re-emit in original order with elision markers where content was dropped.
     Without a query (or no lexical overlap): keep a head+tail window.
     """
     chunks = list(chunks)
@@ -53,10 +57,29 @@ def fit_chunks(
             keep.add(i)
             used += cost
         if keep:
+            used = _add_neighbors(chunks, keep, order, used, max_tokens, neighbor)
             return _stitch(chunks, keep)
 
     # Positional fallback: head + tail.
     return _head_tail(chunks, max_tokens)
+
+
+def _add_neighbors(chunks: Sequence[str], keep: set, order: List[int],
+                   used: int, max_tokens: int, neighbor: int) -> int:
+    """Add up to ``neighbor`` adjacent chunks around matches, best-match first."""
+    if neighbor <= 0:
+        return used
+    matched = [i for i in order if i in keep]  # highest-scoring kept first
+    for i in matched:
+        for off in range(1, neighbor + 1):
+            for j in (i - off, i + off):
+                if 0 <= j < len(chunks) and j not in keep:
+                    cost = count_tokens(chunks[j]) + 2
+                    if used + cost > max_tokens:
+                        continue
+                    keep.add(j)
+                    used += cost
+    return used
 
 
 def _stitch(chunks: Sequence[str], keep: set) -> str:

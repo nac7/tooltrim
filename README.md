@@ -161,7 +161,18 @@ By default the compressed output ends with a small footer the model can act on:
 
 Expose an `expand(ref)` tool to your agent and it can pull the full output back
 whenever the extract isn't enough — turning aggressive compression into a safe
-default.
+default. tooltrim hands you both the tool schema and the handler:
+
+```python
+tools = my_tools + [tc.expand_tool_spec(style="openai")]   # or style="anthropic"
+
+# when the model calls expand_tool_output(ref=..., start=..., length=...):
+result_text = tc.handle_expand(ref, start=start, length=length)   # paged, safe
+```
+
+See [`examples/04_expand_tool.py`](examples/04_expand_tool.py) for a full wiring.
+Extractive compressors also keep **neighbor context** (a line/sentence around each
+match) so the model gets context, not just the bare matching line.
 
 ### 4. Optional: LLM distillation (any provider)
 

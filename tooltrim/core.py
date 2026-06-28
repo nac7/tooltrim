@@ -142,3 +142,63 @@ class ToolCompressor:
         if self.store is None:
             return None
         return self.store.expand(ref, start=start, length=length)
+
+    # --- expand-as-a-tool ----------------------------------------------------
+    # Register this with your agent so it can pull back the full output when a
+    # compressed extract isn't enough — turning aggressive compression into a
+    # safe default rather than a lossy gamble.
+
+    EXPAND_TOOL_NAME = "expand_tool_output"
+
+    def expand_tool_spec(self, *, style: str = "openai") -> dict:
+        """Return a tool/function definition for the expand tool.
+
+        ``style``: "openai" (chat/completions function), "anthropic" (Messages
+        tool), or "raw" (name/description/schema).
+        """
+        description = (
+            "Retrieve the full, uncompressed output behind a tooltrim reference "
+            "(shown in compressed results as 'full output ref=XXXX'). Call this "
+            "when the compressed extract is missing a detail you need. Returns a "
+            "page of characters; use start/length to read more."
+        )
+        schema = {
+            "type": "object",
+            "properties": {
+                "ref": {"type": "string",
+                        "description": "the ref id, e.g. a1b2c3d4"},
+                "start": {"type": "integer",
+                          "description": "character offset to start from (default 0)"},
+                "length": {"type": "integer",
+                           "description": "max characters to return (default: one page)"},
+            },
+            "required": ["ref"],
+        }
+        if style == "openai":
+            return {"type": "function", "function": {
+                "name": self.EXPAND_TOOL_NAME,
+                "description": description, "parameters": schema}}
+        if style == "anthropic":
+            return {"name": self.EXPAND_TOOL_NAME,
+                    "description": description, "input_schema": schema}
+        return {"name": self.EXPAND_TOOL_NAME,
+                "description": description, "schema": schema}
+
+    def handle_expand(self, ref: str, *, start: int = 0,
+                      length: Optional[int] = None, page_chars: int = 8000) -> str:
+        """Execute an expand call; returns text (paged) or a clear error string.
+
+        Wire this to the tool the agent calls. When ``length`` is omitted, a
+        single page (``page_chars``) is returned with a continuation hint so the
+        model can fetch the next page rather than flooding its own context.
+        """
+        text = self.expand(ref, start=start, length=length)
+        if text is None:
+            return (f"[tooltrim: no stored output for ref={ref!r}. It may have "
+                    f"expired or the store is disabled.]")
+        if length is None and len(text) > page_chars:
+            nxt = start + page_chars
+            return (text[:page_chars] +
+                    f"\n[tooltrim: truncated to {page_chars} chars; call "
+                    f"{self.EXPAND_TOOL_NAME}(ref={ref!r}, start={nxt}) for more]")
+        return text

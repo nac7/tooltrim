@@ -60,13 +60,19 @@ def compress(text: str, query: str | None, max_tokens: int) -> str:
         base = 2.0 if _IMPORTANT.search(collapsed[i][0]) else 0.0
         return base + (rel[i] if has_rel else 0.0)
 
-    for i in sorted(range(n), key=importance, reverse=True):
-        if importance(i) <= 0:
-            break
+    important = [i for i in sorted(range(n), key=importance, reverse=True)
+                 if importance(i) > 0]
+    for i in important:
         if not try_add(i):
             break
 
-    # 2) Fill remaining budget with head then tail for context.
+    # 2) Pull in the line immediately before/after each error for context.
+    for i in important:
+        for j in (i - 1, i + 1):
+            if 0 <= j < n:
+                try_add(j)
+
+    # 3) Fill remaining budget with head then tail for context.
     for i in list(range(n)) + list(range(n - 1, -1, -1)):
         if not try_add(i):
             break
