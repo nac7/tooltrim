@@ -195,25 +195,53 @@ distiller = LLMDistiller(complete, max_tokens=300)
 summary = distiller.compress(huge_output, query="refund status")
 ```
 
-### 5. Or run it as a proxy — zero code changes
+### 5. Drop into LangChain — one line per tool
 
-Point any OpenAI-compatible client at the tooltrim proxy; every `role:"tool"` /
-`role:"function"` message is compressed (using the latest user message as the
-relevance query) before being forwarded upstream. Works for any language or
-framework — you only change `base_url`.
+Already have LangChain tools? Wrap any of them and you get back a tool with the
+**same name, description, and argument schema**, so the agent calls it unchanged —
+but its (string) output is compressed before it lands in the scratchpad. The
+relevance query comes from the tool's own arguments.
 
 ```bash
-python run_proxy.py --upstream https://api.openai.com/v1   # any OpenAI-compatible endpoint
+pip install tooltrim[langchain]
+```
+
+```python
+from tooltrim.integrations import compress_langchain_tool, compress_langchain_tools
+
+fetch = compress_langchain_tool(my_tool, max_tokens=400,
+                                query_from=lambda query, **_: query)
+
+# or wrap the whole toolset at once (sharing one compressor + expand store):
+tools = compress_langchain_tools(my_tools, max_tokens=400)
+```
+
+See [`examples/03_langchain_tool.py`](examples/03_langchain_tool.py).
+
+### 6. Or run it as a proxy — zero code changes
+
+Point your client at the tooltrim proxy; every tool result is compressed (using
+the latest user message as the relevance query) before being forwarded upstream.
+Both wire formats are understood, routed by request path — you only change
+`base_url`.
+
+```bash
+python run_proxy.py --upstream https://api.openai.com/v1     # OpenAI-compatible
+python run_proxy.py --upstream https://api.anthropic.com/v1  # Claude
 ```
 
 ```python
 from openai import OpenAI
 client = OpenAI(base_url="http://127.0.0.1:8800/v1", api_key="<upstream key>")
-# use the API normally — bloated tool results are trimmed in flight
+
+from anthropic import Anthropic
+client = Anthropic(base_url="http://127.0.0.1:8800")
 ```
 
-The proxy is stdlib-only and **fails open**: if anything goes wrong it forwards
-the original request untouched, so it never breaks a production call.
+`/v1/chat/completions` compresses OpenAI `role:"tool"` messages; `/v1/messages`
+compresses Anthropic `tool_result` blocks. The proxy is stdlib-only and **fails
+open**: if anything goes wrong it forwards the original request untouched, so it
+never breaks a production call.
 
 ## How it works
 
@@ -247,12 +275,13 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic zero-dependency core, 47-test suite, reproducible token +
-**faithfulness** benchmarks (with Wilson CIs), an OpenAI-compatible **proxy**, and
-citable run artifacts under [`benchmarks/`](benchmarks/).
+v0.1 — deterministic zero-dependency core, 66-test suite, reproducible token +
+**faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
+both **OpenAI and Anthropic** wire formats, a **LangChain** adapter, and citable
+run artifacts under [`benchmarks/`](benchmarks/).
 
 Roadmap: frontier-model faithfulness runs, embedding-based relevance, streaming
 compression, a pluggable Redis/S3 expand-store for horizontal scale, and native
-LangChain / LlamaIndex / OpenAI-Agents wrappers.
+LlamaIndex / OpenAI-Agents wrappers.
 
 Contributions and benchmark cases welcome. MIT licensed.

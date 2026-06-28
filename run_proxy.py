@@ -1,15 +1,22 @@
-"""Run the tooltrim OpenAI-compatible compression proxy.
+"""Run the tooltrim compression proxy (OpenAI + Anthropic wire formats).
 
     python run_proxy.py                          # -> https://api.openai.com/v1
     python run_proxy.py --upstream https://api.groq.com/openai/v1
+    python run_proxy.py --upstream https://api.anthropic.com/v1   # Claude
     python run_proxy.py --port 8800 --max-tokens 400
 
-Then point any OpenAI-compatible client at it — no app changes:
+Then point any client at it — no app changes. OpenAI-compatible:
 
     from openai import OpenAI
     client = OpenAI(base_url="http://127.0.0.1:8800/v1", api_key="<upstream key>")
 
-Every role:"tool" / role:"function" message is compressed before forwarding.
+Anthropic:
+
+    from anthropic import Anthropic
+    client = Anthropic(base_url="http://127.0.0.1:8800")
+
+The proxy routes by path: `/v1/chat/completions` compresses OpenAI
+role:"tool" messages; `/v1/messages` compresses Anthropic tool_result blocks.
 """
 
 from __future__ import annotations

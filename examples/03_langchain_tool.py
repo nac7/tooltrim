@@ -1,8 +1,10 @@
-"""Use tooltrim with a LangChain tool.
+"""Drop tooltrim into an existing LangChain agent — one line per tool.
 
-Because tooltrim wraps the underlying function, the compressed output flows
-through whatever framework you use. Here we compress before LangChain's @tool
-sees the result, so the agent's scratchpad stays small.
+You already have LangChain tools. ``compress_langchain_tool`` wraps any of them
+and returns a tool with the *same* name / description / args schema, so the agent
+calls it unchanged — but the (string) result is tooltrim-compressed before it
+ever lands in the scratchpad. The relevance query is taken from the tool's own
+arguments via ``query_from``.
 
 Run (needs `langchain-core`):  python examples/03_langchain_tool.py
 """
@@ -12,12 +14,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from tooltrim import ToolCompressor, wrap_tool
-
-TC = ToolCompressor(max_tokens=300)
+from tooltrim import count_tokens
 
 
-def _raw_fetch_docs(topic: str) -> str:
+def _long_docs(topic: str) -> str:
     """Imagine this scrapes a long documentation page."""
     sections = [f"## Section {i}\n" + ("filler. " * 60) for i in range(40)]
     sections[17] = ("## Rate limits\nThe API allows 5000 requests/hour per key; "
@@ -25,26 +25,33 @@ def _raw_fetch_docs(topic: str) -> str:
     return "\n\n".join(sections)
 
 
-# Compress + make it query-aware off the tool's own argument.
-fetch_docs = wrap_tool(_raw_fetch_docs, compressor=TC,
-                       query_from=lambda topic: topic)
-
-
 def main():
     try:
         from langchain_core.tools import tool
     except ImportError:
-        print("Install `langchain-core` for the full demo. Compressed output:\n")
-        print(fetch_docs("rate limits"))
+        print("Install `langchain-core` for this demo:  pip install tooltrim[langchain]")
         return
 
+    from tooltrim.integrations import compress_langchain_tool
+
+    # An ordinary LangChain tool you already have.
     @tool
     def fetch_documentation(topic: str) -> str:
-        """Fetch documentation about a topic (auto-compressed by tooltrim)."""
-        return fetch_docs(topic)
+        """Fetch documentation about a topic."""
+        return _long_docs(topic)
 
-    out = fetch_documentation.invoke({"topic": "rate limits"})
-    print("=== LangChain tool output (compressed) ===")
+    # One line: same tool, compressed + query-aware off its `topic` argument.
+    fetch = compress_langchain_tool(
+        fetch_documentation, max_tokens=300, query_from=lambda topic: topic)
+
+    raw = fetch_documentation.invoke({"topic": "rate limits"})
+    out = fetch.invoke({"topic": "rate limits"})
+
+    print(f"tool name preserved: {fetch.name!r}")
+    print(f"raw output:        {count_tokens(raw):>6,} tokens")
+    print(f"compressed output: {count_tokens(out):>6,} tokens "
+          f"({(1 - count_tokens(out) / count_tokens(raw)) * 100:.0f}% smaller)\n")
+    print("=== compressed output the agent sees ===")
     print(out)
 
 
