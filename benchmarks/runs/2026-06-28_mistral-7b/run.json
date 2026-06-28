@@ -1,0 +1,2019 @@
+{
+  "tool": "tooltrim",
+  "tooltrim_version": "0.1.0",
+  "run_utc": "2026-06-28T15:36:37.168596+00:00",
+  "git_commit": "17f4a8695918a5211e4b24aad67008e6ea47b41c",
+  "git_dirty": false,
+  "python": "3.13.5",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "exact_tiktoken": true,
+  "note": "Local Ollama 7B; 62-case dataset (single+multi+distractor); Wilson 95% CIs.",
+  "model": {
+    "name": "mistral:7b",
+    "provider": "ollama",
+    "model_id": "mistral:7b"
+  },
+  "dataset": {
+    "n": 62,
+    "types": {
+      "text": 18,
+      "html": 10,
+      "json": 14,
+      "logs": 10,
+      "tabular": 10
+    },
+    "categories": {
+      "single": 50,
+      "multi": 6,
+      "distractor": 6
+    },
+    "case_ids": [
+      "text-01",
+      "text-02",
+      "text-03",
+      "text-04",
+      "text-05",
+      "text-06",
+      "text-07",
+      "text-08",
+      "text-09",
+      "text-10",
+      "html-01",
+      "html-02",
+      "html-03",
+      "html-04",
+      "html-05",
+      "html-06",
+      "html-07",
+      "html-08",
+      "html-09",
+      "html-10",
+      "json-01",
+      "json-02",
+      "json-03",
+      "json-04",
+      "json-05",
+      "json-06",
+      "json-07",
+      "json-08",
+      "json-09",
+      "json-10",
+      "logs-01",
+      "logs-02",
+      "logs-03",
+      "logs-04",
+      "logs-05",
+      "logs-06",
+      "logs-07",
+      "logs-08",
+      "logs-09",
+      "logs-10",
+      "tabular-01",
+      "tabular-02",
+      "tabular-03",
+      "tabular-04",
+      "tabular-05",
+      "tabular-06",
+      "tabular-07",
+      "tabular-08",
+      "tabular-09",
+      "tabular-10",
+      "multi-01",
+      "multi-02",
+      "multi-03",
+      "multi-04",
+      "multi-05",
+      "multi-06",
+      "distractor-01",
+      "distractor-02",
+      "distractor-03",
+      "distractor-04",
+      "distractor-05",
+      "distractor-06"
+    ]
+  },
+  "budgets": [
+    128,
+    256,
+    400
+  ],
+  "full": {
+    "accuracy": 0.12903225806451613,
+    "correct": 8,
+    "n": 62,
+    "avg_tokens": 6634.790322580645,
+    "accuracy_ci95": [
+      0.06685798258498754,
+      0.23449556896904517
+    ]
+  },
+  "budget_results": [
+    {
+      "budget": 128,
+      "avg_tokens": 94.43548387096774,
+      "saved_ratio": 0.9857666212073698,
+      "accuracy": 0.8387096774193549,
+      "accuracy_ci95": [
+        0.7279343069043936,
+        0.9099602764593157
+      ],
+      "correct": 52,
+      "n": 62,
+      "retention": 6.5
+    },
+    {
+      "budget": 256,
+      "avg_tokens": 177.1290322580645,
+      "saved_ratio": 0.9733029947223458,
+      "accuracy": 0.8064516129032258,
+      "accuracy_ci95": [
+        0.6914796824829172,
+        0.885663035798534
+      ],
+      "correct": 50,
+      "n": 62,
+      "retention": 6.25
+    },
+    {
+      "budget": 400,
+      "avg_tokens": 228.98387096774192,
+      "saved_ratio": 0.9654873990232329,
+      "accuracy": 0.8225806451612904,
+      "accuracy_ci95": [
+        0.7095819851661977,
+        0.8979366656563825
+      ],
+      "correct": 51,
+      "n": 62,
+      "retention": 6.375000000000001
+    }
+  ],
+  "category_breakdown": {
+    "distractor": {
+      "n": 6,
+      "full_correct": 0,
+      "full_accuracy": 0.0,
+      "per_budget": {
+        "128": {
+          "correct": 5,
+          "n": 6,
+          "accuracy": 0.8333333333333334
+        },
+        "256": {
+          "correct": 4,
+          "n": 6,
+          "accuracy": 0.6666666666666666
+        },
+        "400": {
+          "correct": 4,
+          "n": 6,
+          "accuracy": 0.6666666666666666
+        }
+      }
+    },
+    "multi": {
+      "n": 6,
+      "full_correct": 0,
+      "full_accuracy": 0.0,
+      "per_budget": {
+        "128": {
+          "correct": 6,
+          "n": 6,
+          "accuracy": 1.0
+        },
+        "256": {
+          "correct": 6,
+          "n": 6,
+          "accuracy": 1.0
+        },
+        "400": {
+          "correct": 6,
+          "n": 6,
+          "accuracy": 1.0
+        }
+      }
+    },
+    "single": {
+      "n": 50,
+      "full_correct": 8,
+      "full_accuracy": 0.16,
+      "per_budget": {
+        "128": {
+          "correct": 41,
+          "n": 50,
+          "accuracy": 0.82
+        },
+        "256": {
+          "correct": 40,
+          "n": 50,
+          "accuracy": 0.8
+        },
+        "400": {
+          "correct": 41,
+          "n": 50,
+          "accuracy": 0.82
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "text-01",
+      "content_type": "text",
+      "category": "single",
+      "question": "What is the API rate limit per hour?",
+      "gold": "5000 requests per hour",
+      "full": {
+        "correct": false,
+        "tokens": 4071,
+        "answer": " This text appears to contain a list of phrases related to computer systems and networking, including terms such as \"balance\", \"response\", \"pipeline\", \"ledger\", \"cache\", \"latency\", \"policy\", \"session\", \"worker\", \"order\", \"retry\", \"handler\", and various other technical terms. However, it does not contain a coherent question or narrative, so it is difficult to provide a concise answer to any question based on this text alone. It looks like it might be related to system architecture or software development, but more context would be needed to accurately identify the specific topic."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The API rate limit is 5000 requests per hour per key. (Taken from the first sentence in the provided output.)"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The API rate limit is 5000 requests per hour per key. (Taken from the first sentence in the provided output.)"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The API rate limit is 5000 requests per hour per key. (Taken from the first sentence in the provided output.)"
+        }
+      }
+    },
+    {
+      "id": "text-02",
+      "content_type": "text",
+      "category": "single",
+      "question": "How often does the deployment key rotate?",
+      "gold": "every 24 hours",
+      "full": {
+        "correct": false,
+        "tokens": 4069,
+        "answer": " I'm unable to provide a concise answer due to the extensive amount of information provided in your text, which appears to be a list of terms and phrases related to computer networking, cloud computing, and data storage. However, some of the key terms that stand out are:\n\n* Networking (communication between devices)\n* Cloud computing (storing and processing data on remote servers)\n* Data storage (keeping digital information safe and accessible)\n* Server (a powerful computer that manages network resources)\n* API (Application Programming Interface; a set of protocols for building software applications)\n* DNS (Domain Name System; translates domain names into IP addresses)\n* Firewall (security system that monitors and controls incoming and outgoing network traffic)\n* Bandwidth (the capacity of a connection to transfer data)\n* VPN (Virtual Private Network; a secure, encrypted connection to a private network)\n* CDN (Content Delivery Network; a distributed network used to efficiently deliver content on the internet)\n* Uptime (the time a system or service is available and operational)\n\nIf you have a specific question about these topics, feel free to ask!"
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 70,
+          "answer": " Not found."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 70,
+          "answer": " Not found."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 70,
+          "answer": " Not found."
+        }
+      }
+    },
+    {
+      "id": "text-03",
+      "content_type": "text",
+      "category": "single",
+      "question": "Which port does the metrics exporter listen on?",
+      "gold": "port 9187",
+      "full": {
+        "correct": false,
+        "tokens": 4060,
+        "answer": " This seems to be a collection of data related to various aspects of a system, such as latency, timeouts, queues, handlers, policies, workers, accounts, invoices, regions, and more. However, it's not a structured response or question, so it's unclear what specific information you're asking for. If you could provide more context or ask a specific question, I would be happy to help further!"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The metrics exporter listens on port 9187."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The metrics exporter listens on port 9187."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The metrics exporter listens on port 9187."
+        }
+      }
+    },
+    {
+      "id": "text-04",
+      "content_type": "text",
+      "category": "single",
+      "question": "What is the maximum upload size per file?",
+      "gold": "250 megabytes",
+      "full": {
+        "correct": false,
+        "tokens": 4066,
+        "answer": " The provided text appears to be a list of phrases related to computer systems, networking, and data processing. Here are some possible categories or topics that might be relevant based on the content:\n\n* Data storage/retrieval (e.g., latency, cache, queue)\n* Networking (e.g., gateway, region, downstream, upstream)\n* Computational processes (e.g., worker, scheduler, policy, handler)\n* System management (e.g., account, session, balance, timeout)\n* Data types (e.g., invoice, ledger, order, shard)\n* Communication protocols (e.g., pipeline)\n* Software components (e.g., cluster, system, service)\n\nWithout additional context or information, it's difficult to definitively classify all the phrases in this list under specific categories. However, there is certainly an overlap between them related to topics such as cloud computing, big data processing, and systems administration."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The maximum upload size per file is 250 megabytes (quoted from \"250 megabytes per file\")."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The maximum upload size per file is 250 megabytes (quoted from \"250 megabytes per file\")."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 71,
+          "answer": " The maximum upload size per file is 250 megabytes (quoted from \"250 megabytes per file\")."
+        }
+      }
+    },
+    {
+      "id": "text-05",
+      "content_type": "text",
+      "category": "single",
+      "question": "What is the default session timeout?",
+      "gold": "30 minutes",
+      "full": {
+        "correct": false,
+        "tokens": 4068,
+        "answer": " The conversation appears to be a list of phrases related to computer systems, including terms like \"upstream\", \"downstream\", \"cache\", \"pipeline\", \"worker\", \"latency\", \"request\", \"response\", \"gateway\", \"metric\", \"policy\", and more. However, it does not seem to form a coherent dialogue or narrative; rather, it appears to be a collection of phrases related to these concepts."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 106,
+          "answer": " The default session timeout is 30 minutes of inactivity."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 230,
+          "answer": " The default session timeout is 30 minutes of inactivity."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 381,
+          "answer": " The default session timeout is 30 minutes of inactivity."
+        }
+      }
+    },
+    {
+      "id": "text-06",
+      "content_type": "text",
+      "category": "single",
+      "question": "What time do the nightly backups run?",
+      "gold": "02:00 UTC",
+      "full": {
+        "correct": true,
+        "tokens": 4072,
+        "answer": " Here is a summary of the key points from the provided chat history, regarding data backup and timings:\n1. Nightly backups run at 02:00 UTC every day.\n2. The backup includes the following components: ledger, user balance, account, order, session, system, policy, shard, worker, queue, and cache."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The nightly backups run at 02:00 UTC every day."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The nightly backups run at 02:00 UTC every day."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " The nightly backups run at 02:00 UTC every day."
+        }
+      }
+    },
+    {
+      "id": "text-07",
+      "content_type": "text",
+      "category": "single",
+      "question": "What is the support contact address?",
+      "gold": "help@auren.example",
+      "full": {
+        "correct": false,
+        "tokens": 4071,
+        "answer": " It appears you've provided a large list of phrases related to various aspects of a system, such as components, processes, and policies. However, you didn't ask a specific question. Here are some summarized meanings for some of the terms listed:\n\n1. Gateway: A device or software that links two different networks or systems together.\n2. Cluster: A group of computers linked together to act as a single system.\n3. Shard: A segment of a database used by a distributed system.\n4. Queue: A data structure where elements are added at the rear and removed from the front, following the Last-In-First-Out (LIFO) principle.\n5. Policy: A set of rules or guidelines that govern a system's behavior or access control.\n6. Service: A function provided by a system for achieving specific tasks and interactions between components.\n7. Session: A distinct interaction between an end user and a server where data is exchanged over a network.\n8. Worker: An independent unit of work executed by an application, such as in distributed systems.\n9. Ledger: A record of transactions or events, often used in financial or administrative contexts"
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 73,
+          "answer": " Not found in the provided output."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 73,
+          "answer": " Not found in the provided output."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 73,
+          "answer": " Not found in the provided output."
+        }
+      }
+    },
+    {
+      "id": "text-08",
+      "content_type": "text",
+      "category": "single",
+      "question": "What is the cache time-to-live in seconds?",
+      "gold": "900 seconds",
+      "full": {
+        "correct": true,
+        "tokens": 4071,
+        "answer": " Region Cache Time-to-live: 900 seconds\n\n1. The system has a policy for caching data in the region, with a time-to-live of 900 seconds.\n2. Data request and response handling involve multiple components such as schedulers, workers, and gateways.\n3. Retry mechanisms are in place for handling failures, timeouts, and balancing loads.\n4. Policy management includes queueing, ordering, and latency control for efficient service delivery.\n5. Sessions are established to manage user requests, with tracing capabilities to monitor request-response interactions.\n6. The system supports various data types, including cache, ledger, shard, and invoice for better organization and handling of data."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 106,
+          "answer": " The cache time-to-live is configured to 900 seconds."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 229,
+          "answer": " The cache time-to-live is configured to 900 seconds. (Quoted from the provided output)"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 384,
+          "answer": " The cache time-to-live is configured to 900 seconds."
+        }
+      }
+    },
+    {
+      "id": "text-09",
+      "content_type": "text",
+      "category": "single",
+      "question": "What uptime does the SLA guarantee?",
+      "gold": "99.95 percent",
+      "full": {
+        "correct": false,
+        "tokens": 4074,
+        "answer": " This text appears to list many items related to a system, including components such as account, ledger, shard, policy, and scheduler, along with various actions like retry, timeout, and balance. The system guarantees 99.95% uptime under the SLA (Service Level Agreement). However, the context suggests that it is a log or documentation detailing system operations rather than a conversational response."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 74,
+          "answer": " The SLA guarantees 99.95 percent uptime."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 74,
+          "answer": " The SLA guarantees 99.95 percent uptime."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 74,
+          "answer": " The SLA guarantees 99.95 percent uptime."
+        }
+      }
+    },
+    {
+      "id": "text-10",
+      "content_type": "text",
+      "category": "single",
+      "question": "How many times is a webhook retried?",
+      "gold": "5 times",
+      "full": {
+        "correct": false,
+        "tokens": 4063,
+        "answer": " 1. What is the relation between \"answer\" and its verb form \"answered\"?\nThe noun 'answer' provides a response to a question, while the verb 'answered' describes the action of providing that response.\n\n2. Is there a difference between \"difference\" and \"differ\"?\nYes, 'difference' is a noun describing something that makes two things unlike or unlike parts of something unlike the rest, while 'differ' is the third person singular form of the verb 'differ' which means to be unlike in some respect.\n\n3. Is it correct to write \"I don't think you understands me\"?\nNo, it should be \"I don't think you understand me\". The correct usage involves using the base form 'understand' after 'don't'.\n\n4. What is the difference between \"its\" and \"it's\"?\n'Its' is a possessive pronoun meaning belonging to it or them, while 'it's' is a contraction of 'it is'. However, their homophonous nature often leads to their misuse.\n\n5. What is the difference between \"than\" and \"then"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " Each webhook is retried up to 5 times."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " Each webhook is retried up to 5 times."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 73,
+          "answer": " Each webhook is retried up to 5 times."
+        }
+      }
+    },
+    {
+      "id": "html-01",
+      "content_type": "html",
+      "category": "single",
+      "question": "What is the capital of the Republic of Auren?",
+      "gold": "Mateldorf",
+      "full": {
+        "correct": true,
+        "tokens": 2810,
+        "answer": " The capital of the Republic of Auren is Mateldorf."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " The capital of the Republic of Auren is not found in the provided output."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " The capital of the Republic of Auren is not found in the provided output."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " The capital of the Republic of Auren is not found in the provided output."
+        }
+      }
+    },
+    {
+      "id": "html-02",
+      "content_type": "html",
+      "category": "single",
+      "question": "Who is Acme Corp's chief executive officer?",
+      "gold": "Dana Whitlock",
+      "full": {
+        "correct": true,
+        "tokens": 2813,
+        "answer": " Acme Corp's chief executive officer is Dana Whitlock."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " Not found. The provided tool output does not contain information about Acme Corp's chief executive officer."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " Not found. The provided tool output does not contain information about Acme Corp's chief executive officer."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 39,
+          "answer": " Not found. The provided tool output does not contain information about Acme Corp's chief executive officer."
+        }
+      }
+    },
+    {
+      "id": "html-03",
+      "content_type": "html",
+      "category": "single",
+      "question": "What is the current stable release version?",
+      "gold": "12.4.1",
+      "full": {
+        "correct": false,
+        "tokens": 2816,
+        "answer": " Not found."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 41,
+          "answer": " The current stable release version is not found in the provided tool output."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 41,
+          "answer": " The current stable release version is not found in the provided tool output."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 41,
+          "answer": " The current stable release version is not found in the provided tool output."
+        }
+      }
+    },
+    {
+      "id": "html-04",
+      "content_type": "html",
+      "category": "single",
+      "question": "Where is the company headquarters located?",
+      "gold": "Brindale",
+      "full": {
+        "correct": false,
+        "tokens": 2809,
+        "answer": " Not found. The given output does not contain information about the company headquarters location."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found. The provided tool output does not contain the information about the company headquarters location."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found. The provided tool output does not contain the information about the company headquarters location."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found. The provided tool output does not contain the information about the company headquarters location."
+        }
+      }
+    },
+    {
+      "id": "html-05",
+      "content_type": "html",
+      "category": "single",
+      "question": "In what year was the organization founded?",
+      "gold": "1987",
+      "full": {
+        "correct": false,
+        "tokens": 2809,
+        "answer": " Not found."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 39,
+          "answer": " The organization was founded in 1987. (The relevant value is found under the tool output but not quoted directly as requested, so I provided it here instead for clearer reference.)"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 39,
+          "answer": " The organization was founded in 1987. (The relevant value is found under the tool output but not quoted directly as requested, so I provided it here instead for clearer reference.)"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 39,
+          "answer": " The organization was founded in 1987. (The relevant value is found under the tool output but not quoted directly as requested, so I provided it here instead for clearer reference.)"
+        }
+      }
+    },
+    {
+      "id": "html-06",
+      "content_type": "html",
+      "category": "single",
+      "question": "What time does the museum close on Sundays?",
+      "gold": "6 pm",
+      "full": {
+        "correct": false,
+        "tokens": 2810,
+        "answer": " Not found"
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found. The provided output does not contain information about the museum closing time on Sundays."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found. The provided output does not contain information about the museum closing time on Sundays."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found. The provided output does not contain information about the museum closing time on Sundays."
+        }
+      }
+    },
+    {
+      "id": "html-07",
+      "content_type": "html",
+      "category": "single",
+      "question": "Who is the keynote speaker?",
+      "gold": "Halvard Reyes",
+      "full": {
+        "correct": true,
+        "tokens": 2810,
+        "answer": " The keynote speaker is Professor Halvard Reyes."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found"
+        },
+        "256": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found"
+        },
+        "400": {
+          "correct": false,
+          "tokens": 37,
+          "answer": " Not found"
+        }
+      }
+    },
+    {
+      "id": "html-08",
+      "content_type": "html",
+      "category": "single",
+      "question": "How many floors does the tower building have?",
+      "gold": "42 floors",
+      "full": {
+        "correct": true,
+        "tokens": 2805,
+        "answer": " The tower building has 42 floors in total."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " Not found. The output does not contain any information relevant to the number of floors in a tower building."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " Not found. The output does not contain any information relevant to the number of floors in a tower building."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " Not found. The output does not contain any information relevant to the number of floors in a tower building."
+        }
+      }
+    },
+    {
+      "id": "html-09",
+      "content_type": "html",
+      "category": "single",
+      "question": "How long does the product warranty last?",
+      "gold": "36 months",
+      "full": {
+        "correct": true,
+        "tokens": 2804,
+        "answer": " The product warranty lasts 36 months from purchase."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " The product warranty lasts for 36 months from the date of purchase."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " The product warranty lasts for 36 months from the date of purchase."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 37,
+          "answer": " The product warranty lasts for 36 months from the date of purchase."
+        }
+      }
+    },
+    {
+      "id": "html-10",
+      "content_type": "html",
+      "category": "single",
+      "question": "Which pier does the ferry depart from?",
+      "gold": "Pier 9",
+      "full": {
+        "correct": false,
+        "tokens": 2798,
+        "answer": " Not found."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found in the provided tool output."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found in the provided tool output."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 38,
+          "answer": " Not found in the provided tool output."
+        }
+      }
+    },
+    {
+      "id": "json-01",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a refund issued to a customer?",
+      "gold": "refund issued to customer 4417",
+      "full": {
+        "correct": true,
+        "tokens": 10536,
+        "answer": " The data presents a list of transactions with corresponding status (e.g., ok, failed), transaction amounts, and descriptions. Some examples include \"Retry cluster upstream system service upstream session ledger\" for a transaction that was retried; \"refund issued to customer 4417 for amount 250\" for a refund transaction, and \"Order service gateway handler account balance user session\" for an order-related transaction."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 100,
+          "answer": " The note mentioning a refund issued to a customer is: \"refund issued to customer 4417 for amount 250\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 235,
+          "answer": " The relevant note mentioning a refund issued to a customer is \"refund issued to customer 4417 for amount 250\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 235,
+          "answer": " The relevant note mentioning a refund issued to a customer is \"refund issued to customer 4417 for amount 250\"."
+        }
+      }
+    },
+    {
+      "id": "json-02",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note was flagged for manual fraud review?",
+      "gold": "flagged for manual fraud review",
+      "full": {
+        "correct": false,
+        "tokens": 10533,
+        "answer": " The provided data appears to be a list of objects, each representing an event with properties like status, amount, and note. Here's a summary of the overall information:\n\n1. There are 299 events (objects) in the list.\n2. The status can be either \"pending\" or \"ok\", and it seems that more events are marked as \"pending\" than \"ok\".\n3. The amounts range from as little as 10 cents to over 9000 dollars, with an average that is difficult to determine due to the varied scale.\n4. Notes provide descriptions for each event, though they don't seem to follow a consistent format or pattern.\n\nTo better understand this data, we would need more context about what these events represent and how these properties are related."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 98,
+          "answer": " The note \"flagged for manual fraud review by analyst kim\" was identified."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 235,
+          "answer": " The note \"flagged for manual fraud review by analyst kim\" was associated with the transaction having an amount of 2000.07."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 235,
+          "answer": " The note \"flagged for manual fraud review by analyst kim\" was associated with the transaction having an amount of 2000.07."
+        }
+      }
+    },
+    {
+      "id": "json-03",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a chargeback dispute reason code?",
+      "gold": "chargeback disputed under reason code 4853",
+      "full": {
+        "correct": false,
+        "tokens": 10543,
+        "answer": " The provided data is a list of objects, each containing an 'id', 'status', and 'amount' fields in relation to various operations or transactions. Here are some examples:\n\n- Object with id 1 has a status of 'failed' and amount of 9371.70.\n- Object with id 41 has a status of 'ok' and an amount of 5538.01.\n- Object with id 260 has a status of 'pending' and an amount of 219.70.\n- Object with id 270 has a status of 'pending' and an amount of 8778.36."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 98,
+          "answer": " The note mentioning a chargeback dispute reason code is \"chargeback disputed under reason code 4853\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 234,
+          "answer": " The note \"chargeback disputed under reason code 4853\" mentions a chargeback dispute reason code."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 234,
+          "answer": " The note \"chargeback disputed under reason code 4853\" mentions a chargeback dispute reason code."
+        }
+      }
+    },
+    {
+      "id": "json-04",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions an account locked after failed logins?",
+      "gold": "account locked after 5 failed login",
+      "full": {
+        "correct": false,
+        "tokens": 10538,
+        "answer": " The list provides data for 298 transactions, where each transaction has a status (e.g., 'ok', 'failed', 'pending'), amount, and note/description associated with it. The majority of the transactions are 'pending' or 'failed'. This suggests that there may be ongoing issues with account transactions or processing delays. However, without additional context, it is difficult to determine the exact nature of these issues."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": " The note mentioning an account locked after failed logins is: \"account locked after 5 failed login attempts\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 232,
+          "answer": " The note mentioning an account locked after 5 failed login attempts is: \"account locked after 5 failed login attempts\" (quoted from the output you provided with id: 28)."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 232,
+          "answer": " The note mentioning an account locked after 5 failed login attempts is: \"account locked after 5 failed login attempts\" (quoted from the output you provided with id: 28)."
+        }
+      }
+    },
+    {
+      "id": "json-05",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a shipment delayed at customs?",
+      "gold": "shipment delayed at customs",
+      "full": {
+        "correct": false,
+        "tokens": 10540,
+        "answer": " Here's a brief summary of the data provided:\n\nThe data represents transaction records with various amounts, statuses, and notes. The statuses include 'ok', 'pending', and 'failed'. The notes provide additional information about each transaction, such as what service or system it relates to. It appears to be log data for some kind of online service or application."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 99,
+          "answer": " The note mentioning a shipment delayed at customs is \"shipment delayed at customs checkpoint port 7\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 234,
+          "answer": " The note \"shipment delayed at customs checkpoint port 7\" is mentioned in the sixth item of the results array."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 234,
+          "answer": " The note \"shipment delayed at customs checkpoint port 7\" is mentioned in the sixth item of the results array."
+        }
+      }
+    },
+    {
+      "id": "json-06",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a coupon applied at checkout?",
+      "gold": "coupon SAVE20 applied at checkout",
+      "full": {
+        "correct": false,
+        "tokens": 10532,
+        "answer": " The data provided represents transactions or events in a system, each with an associated amount and status (e.g., success or failure). Examples include balance tracing, gateway interactions, worker activities, queue management, shard handling, and more. Some examples of specific transactions are balance tracing user shard session shard cache, gateway user service worker latency pipeline queue timeout, and cluster system session invoice downstream gateway trace request."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": " The note mentioning a coupon applied at checkout is \"coupon SAVE20 applied at checkout successfully\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " The note \"coupon SAVE20 applied at checkout successfully\" is found."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " The note \"coupon SAVE20 applied at checkout successfully\" is found."
+        }
+      }
+    },
+    {
+      "id": "json-07",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a subscription downgraded to basic tier?",
+      "gold": "subscription downgraded to tier basic",
+      "full": {
+        "correct": false,
+        "tokens": 10541,
+        "answer": " The given data consists of a list of transactions with status (ok or failed), amounts, and notes. Here are some insights from the data:\n\n1. Most transactions are 'ok' (60.97%) compared to 'failed' ones (33.48%).\n2. The maximum amount in a transaction is 9978.68, whereas the minimum is 300.16.\n3. The notes provide information about various types of transactions such as balance, cache, ledger, metric, policy, queue, session, system, upstream, worker, shard, invoice, and gateway.\n4. Some common actions in the notes include retry, timeout, trace, request, and latency.\n5. The average success rate is approximately 62.76% (taking the sum of 'ok' transactions divided by total number of transactions)."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 97,
+          "answer": " The note \"subscription downgraded to tier basic by request\" mentions a subscription that was downgraded to the basic tier."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 233,
+          "answer": " The note \"subscription downgraded to tier basic by request\" is mentioned on the note of result with id 67."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 233,
+          "answer": " The note \"subscription downgraded to tier basic by request\" is mentioned on the note of result with id 67."
+        }
+      }
+    },
+    {
+      "id": "json-08",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions a payment retried via a backup processor?",
+      "gold": "payment retried via backup processor",
+      "full": {
+        "correct": false,
+        "tokens": 10533,
+        "answer": " The provided data appears to be a list of transaction records, each containing an ID, status, and amount for various financial transactions. However, it's not clear if these are individual transactions or aggregated by some criteria (e.g., day, week, month). The status could indicate success (ok/failed) while the amounts seem to represent the monetary value of each transaction. There doesn't seem to be any specific pattern or context provided in this data, so interpreting it further would require additional information and context from the original source."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": " The note \"payment retried via backup processor stripe\" mentions a payment that was retried via a backup processor."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"The note 'payment retried via backup processor' is mentioned in the 80th record.\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"The note 'payment retried via backup processor' is mentioned in the 80th record.\""
+        }
+      }
+    },
+    {
+      "id": "json-09",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions an address verification failure?",
+      "gold": "address verification failed",
+      "full": {
+        "correct": false,
+        "tokens": 10544,
+        "answer": " The provided data appears to be a list of entries containing status, amount, and notes for multiple transactions or events. The statuses might indicate whether an event or transaction was successful (e.g., \"ok\") or unsuccessful (\"failed\" or \"pending\"). The amounts seem to represent the monetary value associated with each event or transaction. The notes provide additional details about what happened during each event or transaction. However, the context of these entries is unclear without more information about their source and purpose."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": " The note mentioning an address verification failure is \"address verification failed with avs code N\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"The note 'address verification failed with avs code N' mentions an address verification failure.\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"The note 'address verification failed with avs code N' mentions an address verification failure.\""
+        }
+      }
+    },
+    {
+      "id": "json-10",
+      "content_type": "json",
+      "category": "single",
+      "question": "Which note mentions an invoice exported to a ledger batch?",
+      "gold": "invoice exported to ledger batch 88",
+      "full": {
+        "correct": false,
+        "tokens": 10531,
+        "answer": " The data provided is a list of records, each containing an ID, status, and amount (which represents a value or cost), as well as a descriptive note. However, the details are not clearly categorized for a simple summary. Here's a brief interpretation:\n\n- Most records indicate some kind of latency, timeout, or balance issue with various systems such as scheduler, pipeline, ledger, policy, and shard.\n- Many records involve user, gateway, session, worker, system, system cache, account, and order.\n- Some records have issues related to specific regions, queue, service response, retry, cache, invoice, or trace."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": " The note mentioning an invoice exported to a ledger batch is \"invoice exported to ledger batch 88 nightly\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"Quote: 'invoice exported to ledger batch 88 nightly' \""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 231,
+          "answer": " \"Quote: 'invoice exported to ledger batch 88 nightly' \""
+        }
+      }
+    },
+    {
+      "id": "logs-01",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions disk usage on /var/data?",
+      "gold": "disk usage 98 percent on /var/data",
+      "full": {
+        "correct": false,
+        "tokens": 7605,
+        "answer": " The log shows repeated messages indicating that a worker with ID 3 is sending heartbeats correctly at regular intervals."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 123,
+          "answer": " The error mentioning disk usage on /var/data is \"ERROR disk usage 98 percent on /var/data writes failing\" (at the time of log entry 2026-06-27 10:42:11)."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 256,
+          "answer": " The error mentioning disk usage on /var/data is: \"ERROR disk usage 98 percent on /var/data writes failing\" found at: 2026-06-27 10:42:11."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 389,
+          "answer": " ERROR disk usage 98 percent on /var/data writes failing"
+        }
+      }
+    },
+    {
+      "id": "logs-02",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions an out of memory condition?",
+      "gold": "out of memory killing process pid 8123",
+      "full": {
+        "correct": false,
+        "tokens": 7603,
+        "answer": " The provided text is a list of log messages indicating that a process called \"heartbeat\" has sent a successful status update every minute from June 27, 2026, starting at 10:00. Each log entry shows the exact timestamp of the status update and identifies the worker (worker=3). The status updates all say \"heartbeat ok\"."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 121,
+          "answer": " The error that mentions an out of memory condition is \"ERROR out of memory killing process pid 8123\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 254,
+          "answer": " The error message \"ERROR out of memory killing process pid 8123\" mentions an out of memory condition."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 387,
+          "answer": " The error mentioned for an out of memory condition is \"ERROR out of memory killing process pid 8123\"."
+        }
+      }
+    },
+    {
+      "id": "logs-03",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions an expired tls certificate?",
+      "gold": "tls certificate expired for host api.example.com",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": " These logs show multiple repetitions of the \"heartbeat ok worker=3\" message, which indicates that the system is functioning normally and the worker with ID 3 is active, sending out regular status updates (hearts) to confirm its availability."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 120,
+          "answer": " The error mentioned an expired TLS certificate for the host \"api.example.com\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 253,
+          "answer": " The error mentioned about an expired TLS certificate is on \"2026-06-27 10:42:11 ERROR tls certificate expired for host api.example.com\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 386,
+          "answer": " The error mentioned an expired TLS certificate for host `api.example.com`. (Quoted from the output: \"ERROR tls certificate expired for host api.example.com\")"
+        }
+      }
+    },
+    {
+      "id": "logs-04",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions a refused database connection?",
+      "gold": "connection refused to database replica 2",
+      "full": {
+        "correct": false,
+        "tokens": 7601,
+        "answer": " These are log messages indicating that a process named \"worker\" was able to send heartbeats successfully from every minute starting from 10:00 to 10:40. The heartbeat is scheduled at one-minute intervals. The \"worker\" number is not specified in the provided logs."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " The error mentioning a refused database connection is: \"ERROR connection refused to database replica 2\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 252,
+          "answer": " The error mentions a refused database connection on \"2026-06-27 10:42:11\". Quote: \"ERROR connection refused to database replica 2\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 385,
+          "answer": " \"Error connection refused to database replica 2\""
+        }
+      }
+    },
+    {
+      "id": "logs-05",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions a deadlock on a table?",
+      "gold": "deadlock detected on table orders",
+      "full": {
+        "correct": false,
+        "tokens": 7601,
+        "answer": " The provided text is a list of time-stamped \"heartbeat\" messages, indicating that each message is verifying the continuous operation (or 'heart') of a system or process. They all indicate that the system (worker 3) is operational and responding as expected at each time stamp."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " \"The error mentions a deadlock on the table 'orders'\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 252,
+          "answer": " The error mentioning a deadlock on a table is found at: \"2026-06-27 10:42:11 ERROR deadlock detected on table orders during commit\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 385,
+          "answer": " The error is found mentioning a deadlock on the table \"orders\", at 10:42:11."
+        }
+      }
+    },
+    {
+      "id": "logs-06",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions a rate limit exceeded for an api key?",
+      "gold": "rate limit exceeded for api key 7af3",
+      "full": {
+        "correct": false,
+        "tokens": 7606,
+        "answer": " These are logs showing that a process or system is sending periodic \"heartbeats\" every minute from the third worker. The logs indicate that everything is running smoothly as each message confirms the heartbeat is OK for worker 3."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 124,
+          "answer": " The error message mentioned is \"ERROR rate limit exceeded for api key 7af3\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 257,
+          "answer": " The error is \"rate limit exceeded for api key 7af3\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 390,
+          "answer": " The error mentioning a rate limit exceeded for an api key is \"2026-06-27 10:42:11 ERROR rate limit exceeded for api key 7af3 throttling\"."
+        }
+      }
+    },
+    {
+      "id": "logs-07",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions a failure to bind to a port?",
+      "gold": "failed to bind to port 8443",
+      "full": {
+        "correct": false,
+        "tokens": 7605,
+        "answer": " The logs show that the specified worker is sending a \"heartbeat\" message every minute, as indicated by the timestamped messages with the format \"INFO heartbeat ok worker=3\". This suggests that the system is functioning properly and the worker is communicating effectively with the server."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 123,
+          "answer": " The error that mentions a failure to bind to a port is \"2026-06-27 10:42:11 ERROR failed to bind to port 8443 already in use\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 256,
+          "answer": " The error message that mentions a failure to bind to a port is: \"failed to bind to port 8443 already in use\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 389,
+          "answer": " The error mentioning a failure to bind to port is: \"2026-06-27 10:42:11 ERROR failed to bind to port 8443 already in use\"."
+        }
+      }
+    },
+    {
+      "id": "logs-08",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions a segmentation fault in a worker thread?",
+      "gold": "segmentation fault in worker thread 11",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": " These are timestamped log messages indicating the heartbeat status of a worker, showing that the worker is alive and functioning properly for each recorded time. Each entry shows the message \"INFO: heartbeat ok worker=3\". This suggests it's a periodic check on a piece of equipment (worker), possibly in a distributed system, to ensure its ongoing operation. The number 3 may represent an ID or instance number of the worker."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 120,
+          "answer": " \"ERROR segmentation fault in worker thread 11 crashed\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 253,
+          "answer": " The error mentioning a segmentation fault in a worker thread is: \"2026-06-27 10:42:11 ERROR segmentation fault in worker thread 11 crashed\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 386,
+          "answer": " The error that mentions a segmentation fault in a worker thread is: \"ERROR segmentation fault in worker thread 11 crashed\""
+        }
+      }
+    },
+    {
+      "id": "logs-09",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions kafka consumer lag?",
+      "gold": "kafka consumer lag exceeded 100000",
+      "full": {
+        "correct": false,
+        "tokens": 7602,
+        "answer": " These are log entries of a system or application indicating that everything is running fine and the specified worker (ID 3) is responding as expected every minute from 10:00 to 10:42, then again at irregular intervals till 10:58."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 120,
+          "answer": " The error that mentions Kafka consumer lag is: \"ERROR kafka consumer lag exceeded 100000 messages\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 253,
+          "answer": " \"Error kafka consumer lag exceeded 100000 messages\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 386,
+          "answer": " The error mentioning Kafka consumer lag is: \"ERROR kafka consumer lag exceeded 100000 messages\""
+        }
+      }
+    },
+    {
+      "id": "logs-10",
+      "content_type": "logs",
+      "category": "single",
+      "question": "What error mentions an nfs mount timeout?",
+      "gold": "nfs mount timed out on /shared/cache",
+      "full": {
+        "correct": false,
+        "tokens": 7604,
+        "answer": " The provided text appears to be log data, specifically showing repeated \"heartbeat ok worker=3\" messages, indicating that Worker 3 is consistently responding healthy and active."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 122,
+          "answer": " The error mentioning an nfs mount timeout is: \"ERROR nfs mount timed out on /shared/cache retrying\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 255,
+          "answer": " The error mentioning an nfs mount timeout is: \"ERROR nfs mount timed out on /shared/cache retrying\""
+        },
+        "400": {
+          "correct": true,
+          "tokens": 388,
+          "answer": " The error mentioning an nfs mount timeout is: \"ERROR nfs mount timed out on /shared/cache retrying\""
+        }
+      }
+    },
+    {
+      "id": "tabular-01",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note was flagged for compliance review?",
+      "gold": "flagged for compliance review under sanctions list",
+      "full": {
+        "correct": false,
+        "tokens": 7939,
+        "answer": " It appears to be a list of status updates or logs related to various system operations, possibly from multiple systems (Apac and US), involving policy, requests, queue, ledger, shard, latency, gateway, system, service, worker, cache, invoice, and handlers. The precise meaning of each entry would require more context, as they don't seem to be structured in a commonly recognized format like error messages or log formats."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " The note flagged for compliance review is \"flagged for compliance review under sanctions list\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 243,
+          "answer": " The note \"flagged for compliance review under sanctions list\" was found on the row with id 49."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 363,
+          "answer": " The note flagged for compliance review is \"147.50, flagged for compliance review under sanctions list\"."
+        }
+      }
+    },
+    {
+      "id": "tabular-02",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a vip customer requiring priority handling?",
+      "gold": "vip customer requires priority handling",
+      "full": {
+        "correct": false,
+        "tokens": 7939,
+        "answer": " The provided text appears to be a list of phrases related to various IT systems and processes, but it is not immediately clear what the context or purpose of this list is. Here are brief explanations for some of the phrases:\n\n* Gateway region pipeline: A system or process that handles data traffic between regions through a gateway.\n* Policy worker timeout shard: A worker that manages timeouts related to policy execution in a specific shard.\n* Response downstream request queue: A queue that stores incoming requests and prioritizes their processing.\n* Metric account account response: Measuring the response time or efficiency of an account management system using metrics.\n* Service timeout user order: A service delay that causes a user's order to be timed out (i.e., cancelled).\n* Shard policy metric scheduler: A system that schedules policies and monitors their execution with the help of metrics in a sharded environment.\n* Region retry response metric: Tracking the number and success rate of retries for responses generated within a specific region.\n* Session pipeline ledger service: Service responsible for managing session data and transactions in a pipelined system or architecture.\n* Timeout retry worker account:"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 115,
+          "answer": " The note mentioning a VIP customer requiring priority handling is \"vip customer requires priority handling tier gold\" (row number 62)."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": " The note mentioning a vip customer requiring priority handling is \"vip customer requires priority handling tier gold\", found at row number 62."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 377,
+          "answer": " The note that mentions a VIP customer requiring priority handling is: \"vip customer requires priority handling tier gold\" which can be found at row number 62."
+        }
+      }
+    },
+    {
+      "id": "tabular-03",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a partial refund approval?",
+      "gold": "partial refund approved by supervisor delgado",
+      "full": {
+        "correct": false,
+        "tokens": 7912,
+        "answer": " The provided data appears to be a list of string formatted as \"status message: location,\" where the status messages and locations likely represent system events or issues in a distributed system, with the status indicating whether the event was successful (\"ok\") or not (\"error\"), and the location indicating which part of the system the event occurred in.\n\nFor example, the first entry \"System upstream balance latency: apac\" suggests that there was an issue with the balance-related events occurring on the \"apac\" system in the \"upstream\" region. Similarly, the second entry \"Region account worker request: us\" implies that a worker in the U.S. region submitted a request related to accounts.\n\nWithout further context or additional data, it's difficult to draw specific conclusions from this list alone. However, it seems that the data could be useful for monitoring and troubleshooting issues in a large-scale distributed system."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 118,
+          "answer": " \"The note that mentions a partial refund approval is 'partial refund approved by supervisor delgado'.\""
+        },
+        "256": {
+          "correct": true,
+          "tokens": 243,
+          "answer": " The note mentioning a partial refund approval is \"partial refund approved by supervisor delgado\", found in row 75."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 367,
+          "answer": " The note mentioning a partial refund approval is: \"partial refund approved by supervisor delgado\". (quoted from row 75)"
+        }
+      }
+    },
+    {
+      "id": "tabular-04",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a duplicate transaction?",
+      "gold": "duplicate transaction detected and voided",
+      "full": {
+        "correct": false,
+        "tokens": 7939,
+        "answer": " These are logs of system events where each line shows an action taken in a worker process, such as executing a function (_fn), changing a work queues size (qsize), starting/stopping workers, and status updates (status). The arguments passed to the functions provide more details about the specific actions taken, like the queue name, the task ID, or the number of workers. These events represent interactions between worker processes and the underlying messaging system."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 116,
+          "answer": " The note mentioning a duplicate transaction is \"duplicate transaction detected and voided automatically\"."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 241,
+          "answer": " Duplicate transaction was mentioned in note 88."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 364,
+          "answer": " The note that mentions a duplicate transaction is \"duplicate transaction detected and voided automatically\", which is found in row 88."
+        }
+      }
+    },
+    {
+      "id": "tabular-05",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a manual override applied by an agent?",
+      "gold": "manual override applied by agent 0091",
+      "full": {
+        "correct": false,
+        "tokens": 7900,
+        "answer": " This data list appears to be a series of metrics related to various systems and operations. Each line represents a different metric with the following labels: Region (either \"eu\" for Europe or \"apac\" for Asia-Pacific), Service, Operation, Object, Time (in seconds). The specific details of each operation are difficult to discern without additional context."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 118,
+          "answer": " The note \"manual override applied by agent 0091 at desk\" is associated with the row numbered 101."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 240,
+          "answer": " The note that mentions a manual override applied by an agent is \"manual override applied by agent 0091 at desk\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 363,
+          "answer": " The note \"manual override applied by agent 0091 at desk\" is found at record number 101."
+        }
+      }
+    },
+    {
+      "id": "tabular-06",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a high risk score requiring secondary approval?",
+      "gold": "high risk score requires secondary approval",
+      "full": {
+        "correct": false,
+        "tokens": 7919,
+        "answer": " This is a list of event logs for various systems and services, each log recording an event such as \"Order policy request order\" or \"Pipeline upstream latency queue\". The events indicate different actions performed by the systems, like processing orders, handling requests, and managing caches."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 115,
+          "answer": " The note \"high risk score requires secondary approval review\" is associated with the APAC region (114). Therefore, the note that mentions a high risk score requiring secondary approval is for APAC."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": " The note that mentions a high risk score requiring secondary approval is: \"high risk score requires secondary approval review\" which corresponds to the row with id 114."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 364,
+          "answer": " The note that mentions a high risk score requiring secondary approval is \"high risk score requires secondary approval review\" with the value 342.50."
+        }
+      }
+    },
+    {
+      "id": "tabular-07",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a chargeback reversed after evidence?",
+      "gold": "chargeback reversed after evidence submitted",
+      "full": {
+        "correct": false,
+        "tokens": 7905,
+        "answer": " This appears to be a list of messages in a distributed system, each containing an event and related information such as the region (e.g., US, APAC, EU), service or component involved, and the type of event that occurred (e.g., timeout, request, cache). The events seem to indicate various actions taking place within a complex distributed system, including data requests, responses, timeouts, caching, and error handling."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " The note mentioning a chargeback reversed after evidence is \"chargeback reversed after evidence submitted by merchant\". (Quote from row number 127)"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 241,
+          "answer": " The note that mentions a chargeback reversed after evidence is at row 127 with the value \"chargeback reversed after evidence submitted by merchant\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 363,
+          "answer": " The note that mentions a chargeback reversed after evidence is at row 127: \"chargeback reversed after evidence submitted by merchant\""
+        }
+      }
+    },
+    {
+      "id": "tabular-08",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions loyalty points credited for a referral?",
+      "gold": "loyalty points credited for referral",
+      "full": {
+        "correct": false,
+        "tokens": 7930,
+        "answer": " This appears to be a list of messages generated by a distributed system where each message includes the location (US or APAC) and the event that occurred (e.g., service timeout, policy downstream order metric). The events are related to various operations such as account balances, scheduling tasks, queues, and latency measurements in a system. However, without additional context, it's difficult to provide a more detailed interpretation of these messages."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 117,
+          "answer": " The note that mentions loyalty points credited for a referral is \"loyalty points credited for referral bonus program\", found in row 140."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 241,
+          "answer": " Note 140 mentions loyalty points credited for a referral. (Exact value: \"loyalty points credited for referral bonus program\")"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 364,
+          "answer": " The note \"loyalty points credited for referral\" is found at row number 140."
+        }
+      }
+    },
+    {
+      "id": "tabular-09",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a shipment rerouted to an alternate warehouse?",
+      "gold": "shipment rerouted to alternate warehouse",
+      "full": {
+        "correct": false,
+        "tokens": 7900,
+        "answer": " The sequence contains logs of various events in a system involving operations like handling requests, scheduling tasks, tracing services, account management, queue management, and timeouts in different regions (US and APAC). Some common elements are the terms 'scheduler', 'pipeline', 'request', 'service', 'trace', and 'timeout'."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 116,
+          "answer": " The note that mentions a shipment rerouted to an alternate warehouse is \"shipment rerouted to alternate warehouse depot 3\" which can be found in the record with ID 153."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 241,
+          "answer": " The note mentioning a shipment rerouted to an alternate warehouse is found at row number 153."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 378,
+          "answer": " The note that mentions a shipment rerouted to an alternate warehouse is: \"shipment rerouted to alternate warehouse depot 3\" (from row 153)."
+        }
+      }
+    },
+    {
+      "id": "tabular-10",
+      "content_type": "tabular",
+      "category": "single",
+      "question": "Which note mentions a tax exemption for a nonprofit account?",
+      "gold": "tax exemption applied for nonprofit account",
+      "full": {
+        "correct": false,
+        "tokens": 7894,
+        "answer": " This is a list of 499 logs representing system events, each containing information about the location (e.g., apac, eu), the outcome (e.g., ok), and some action or service involved. Examples include \"policy cache downstream handler\", \"gateway invoice region shard\", and \"region queue service account\". Without additional context or analysis, it's impossible to determine the meaning or significance of these logs individually or in aggregate."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 115,
+          "answer": " The note that mentions a tax exemption for a nonprofit account is \"tax exemption applied for nonprofit account holder\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 238,
+          "answer": " The note mentioning a tax exemption for a nonprofit account is \"tax exemption applied for nonprofit account holder\", which appears at row number 166 in the output."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 378,
+          "answer": " The note mentions a tax exemption for a nonprofit account is: \"$474.50, Response queue account retry\" and \"639.50, Policy gateway queue account\"."
+        }
+      }
+    },
+    {
+      "id": "multi-01",
+      "content_type": "text",
+      "category": "multi",
+      "question": "What are the API rate limit and the request timeout?",
+      "gold": "5000 requests per hour",
+      "full": {
+        "correct": false,
+        "tokens": 4627,
+        "answer": " 1. The API call rate per minute is not specified.\n2. The request timeout is set to 30 seconds.\n3. Authentication requires an API key and a user session ID.\n4. It uses gRPC protocol for communication.\n5. Error responses are encapsulated in a custom Errors object with error code and message details.\n6. There's no rate-limiting or quota management mentioned."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " The API rate limit is 5000 requests per hour, and the request timeout is set to 30 seconds."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 242,
+          "answer": " The API rate limit is 5000 requests per hour, and the request timeout is set to 30 seconds."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 393,
+          "answer": " The API rate limit is 5000 requests per hour, and the request timeout is set to 30 seconds."
+        }
+      }
+    },
+    {
+      "id": "multi-02",
+      "content_type": "text",
+      "category": "multi",
+      "question": "What are the primary datacenter region and the disaster-recovery region?",
+      "gold": "us-east-2",
+      "full": {
+        "correct": false,
+        "tokens": 4632,
+        "answer": " The primary region is US-West (us-west-1) and the disaster recovery region is EU-West (eu-west-1)."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 119,
+          "answer": " The primary datacenter region is us-east-2 and the disaster-recovery region is eu-west-1."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 243,
+          "answer": " The primary datacenter region is us-east-2 and the disaster-recovery region is eu-west-1."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 394,
+          "answer": " The primary datacenter region is us-east-2 and the disaster-recovery region is eu-west-1."
+        }
+      }
+    },
+    {
+      "id": "multi-03",
+      "content_type": "text",
+      "category": "multi",
+      "question": "How many monthly active users do the free tier and the pro tier allow?",
+      "gold": "1000 monthly active users",
+      "full": {
+        "correct": false,
+        "tokens": 4631,
+        "answer": " This text appears to be a list of descriptions of various computing and software services, with each description containing keywords such as \"account,\" \"balance,\" \"cache,\" \"cluster,\" \"gateway,\" \"pipeline,\" \"policy,\" \"request,\" \"response,\" \"retry,\" \"schedule,\" \"session,\" \"ledger,\" \"worker,\" and \"invoice.\" It is not immediately clear what the purpose of this list is or how it relates to a conversation with an assistant. To provide a more helpful response, it would be necessary to know the context in which this text was generated, and the specific question or task that it is intended to address."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 112,
+          "answer": " The free tier allows 1000 monthly active users, and the pro tier allows 50000 monthly active users."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 141,
+          "answer": " The free tier allows 1000 monthly active users, while the pro tier allows 50000 monthly active users."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 141,
+          "answer": " The free tier allows 1000 monthly active users, while the pro tier allows 50000 monthly active users."
+        }
+      }
+    },
+    {
+      "id": "multi-04",
+      "content_type": "json",
+      "category": "multi",
+      "question": "Which two notes both involve customer 4417 (a refund and a chargeback)?",
+      "gold": "refund issued to customer 4417",
+      "full": {
+        "correct": false,
+        "tokens": 11240,
+        "answer": " The provided data appears to be a list of transaction/event records with fields for item ID, status (success or failure), amount, and notes. It seems like these records are related to some kind of transaction system where each record represents an event in the system, such as a successful or failed transaction, and includes details about the amount involved and any relevant notes. However, without additional context, it's hard to make specific conclusions about this data set."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 101,
+          "answer": " The notes involving customer 4417 that are both present in the output are a refund (note: \"refund issued to customer 4417 for amount 250\") and a chargeback (note: \"chargeback opened by customer 4417 reason fraud\")."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 236,
+          "answer": " The notes involving customer 4417 are \"refund issued to customer 4417 for amount 250\" and \"chargeback opened by customer 4417 reason fraud\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 236,
+          "answer": " The notes involving customer 4417 are \"refund issued to customer 4417 for amount 250\" and \"chargeback opened by customer 4417 reason fraud\"."
+        }
+      }
+    },
+    {
+      "id": "multi-05",
+      "content_type": "json",
+      "category": "multi",
+      "question": "What are the two notes about order 8801 (shipment and delivery)?",
+      "gold": "order 8801 shipped via carrier dhl",
+      "full": {
+        "correct": false,
+        "tokens": 11243,
+        "answer": " The data provided seems to be a list of transactions or events, each with a status, amount, and description. Some common descriptions include 'account', 'worker', 'gateway', 'balance', 'session', 'downstream', 'policy', 'pipeline', 'request', 'service', 'region', 'system', 'cache', 'shard', and 'metric'. The statuses are either 'ok' or 'pending', and the amounts are in dollars."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 105,
+          "answer": " The two notes about order 8801 are \"order 8801 shipped via carrier dhl tracking 55a\" and \"order 8801 delivered and signed by recipient garza\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 240,
+          "answer": " The two notes about order 8801 are \"order 8801 shipped via carrier dhl tracking 55a\" and \"order 8801 delivered and signed by recipient garza\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 240,
+          "answer": " The two notes about order 8801 are \"order 8801 shipped via carrier dhl tracking 55a\" and \"order 8801 delivered and signed by recipient garza\"."
+        }
+      }
+    },
+    {
+      "id": "multi-06",
+      "content_type": "text",
+      "category": "multi",
+      "question": "What are the webhook signing secret prefix and the webhook endpoint path?",
+      "gold": "whsec_77",
+      "full": {
+        "correct": false,
+        "tokens": 4636,
+        "answer": " It appears you've listed various strings containing information about webhooks, authentication keys, and system configurations. Here is a summary of some key points:\n\n1. The webhook signing secret begins with `whsec_77`.\n2. There are mentions of multiple systems featuring terms like \"gateway,\" \"cluster,\" \"queue,\" \"cache,\" \"scheduler,\" \"ledger,\" and \"policy.\"\n3. Various strings suggest data processing operations such as requests, responses, and timeouts.\n4. Some strings involve specific entities like \"user,\" \"account,\" \"order,\" \"invoice,\" and \"balance.\"\n5. Certain strings contain terms related to error handling like \"retry\" and \"timeout.\"\n6. Mentions of \"shard\" indicate the possibility of partitioned data storage within these systems.\n7. The presence of \"region\" implies potential geographical distribution or segmentation in these systems.\n\nA more complete understanding of this information requires context and knowledge about the specific application or systems these strings are associated with. If you need help with a specific programming question or requesting services based on the listed data, please provide further details."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 114,
+          "answer": " The webhook signing secret begins with \"whsec_77\". The webhook endpoint path is \"/v2/events/ingest\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 143,
+          "answer": " The webhook signing secret begins with \"whsec_77\". The webhook endpoint path is \"/v2/events/ingest\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 143,
+          "answer": " The webhook signing secret begins with \"whsec_77\". The webhook endpoint path is \"/v2/events/ingest\"."
+        }
+      }
+    },
+    {
+      "id": "distractor-01",
+      "content_type": "text",
+      "category": "distractor",
+      "question": "What is the CURRENT PRODUCTION API key prefix?",
+      "gold": "prod_9f2",
+      "full": {
+        "correct": false,
+        "tokens": 4630,
+        "answer": " Here's a summary of the API key prefixes mentioned in the text:\n\n1. The current production API key prefix is not specified, but typically for most services it would be associated with a string that starts with 'pro.'\n2. The deprecated sandbox API key prefix was 'sand_1a0'."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 116,
+          "answer": " The current production API key prefix is \"prod_9f2\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 146,
+          "answer": " The CURRENT PRODUCTION API key prefix is prod_9f2."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 146,
+          "answer": " The CURRENT PRODUCTION API key prefix is prod_9f2."
+        }
+      }
+    },
+    {
+      "id": "distractor-02",
+      "content_type": "text",
+      "category": "distractor",
+      "question": "What is the NEW mailing address?",
+      "gold": "88 Harbor Road",
+      "full": {
+        "correct": false,
+        "tokens": 4627,
+        "answer": " A series of messages containing information about systems, services, and addresses (old and new mailing address). However, there seems to be no specific question or request for help in the provided text."
+      },
+      "per_budget": {
+        "128": {
+          "correct": false,
+          "tokens": 118,
+          "answer": " Not found. The provided output does not contain information about a new mailing address. Only the old one (12 Elm Street, Unit 3) is mentioned."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 147,
+          "answer": " Not found (the question about the NEW mailing address is not present in the provided tool output)."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 147,
+          "answer": " Not found (the question about the NEW mailing address is not present in the provided tool output)."
+        }
+      }
+    },
+    {
+      "id": "distractor-03",
+      "content_type": "text",
+      "category": "distractor",
+      "question": "What is the default database port AFTER the migration?",
+      "gold": "6543",
+      "full": {
+        "correct": false,
+        "tokens": 4633,
+        "answer": " This text appears to be a list of phrases related to database and programming concepts. Here's a summary of some common themes from the provided text:\n\n1. Database Ports (5432, 3306): These are network ports that databases use to communicate with client applications. In this case, one port is mentioned before migration, another after.\n\n2. Account, Request, Response, Caching, and Handler: These terms are commonly used in programming contexts related to web applications or APIs, referring to the creation, processing, and storage of data.\n\n3. Scheduler, Policy, Trace, and System: These terms may refer to mechanisms for managing tasks, implementing specific rules, collecting logs, and overall functionality of a system in software development.\n\n4. Region, Cluster: These usually indicate distribution or partitioning of resources within a larger structure (e.g., geographically distributed databases or data storage).\n\n5. Service, Worker, Metrics, Cache, Pipeline: Terms that relate to the functionality, organization, and performance consideration of software systems, such as services, agents, monitoring, and processing pipelines."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 114,
+          "answer": " The default database port AFTER the migration is 6543."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 143,
+          "answer": " The default database port AFTER the migration is 6543."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 143,
+          "answer": " The default database port AFTER the migration is 6543."
+        }
+      }
+    },
+    {
+      "id": "distractor-04",
+      "content_type": "json",
+      "category": "distractor",
+      "question": "What is the approved limit for the PREMIUM account?",
+      "gold": "25000 dollars",
+      "full": {
+        "correct": false,
+        "tokens": 11240,
+        "answer": " In this data set, there are 319 entries representing various events related to balances, sessions, orders, and caches, with certain amounts accompanying each event. Of these entries, only 5 have a \"status\" of \"failed\". The failed status indicates that the associated event or transaction did not succeed as expected. Here's a list of the five failed transactions categorized by their descriptions:\n\n1. Gateway scheduler shard ledger gateway user region scheduler (ID: 318)\n2. Balance order handler session scheduler order account retry (ID: 316)\n3. Shard cluster upstream upstream cache system scheduler (ID: 305)\n4. Gateway response account region retry downstream service policy (ID: 295)\n5. Cluster service session cluster handler request response trace (ID: 303)"
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 96,
+          "answer": " The approved limit for the PREMIUM account is 25000 dollars."
+        },
+        "256": {
+          "correct": false,
+          "tokens": 230,
+          "answer": " The approved limit for the PREMIUM account is $25,000 dollars."
+        },
+        "400": {
+          "correct": false,
+          "tokens": 230,
+          "answer": " The approved limit for the PREMIUM account is $25,000 dollars."
+        }
+      }
+    },
+    {
+      "id": "distractor-05",
+      "content_type": "text",
+      "category": "distractor",
+      "question": "Who is the REPLACEMENT escalation contact?",
+      "gold": "Priya Nandakumar",
+      "full": {
+        "correct": false,
+        "tokens": 4637,
+        "answer": " The provided text is a list of phrases related to computing and IT, possibly corresponding to various system components or processes. However, it does not form a coherent narrative or answer a specific question. To provide a more conclusive answer, please specify the context or Question for which these phrases are relevant."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 115,
+          "answer": " The replacement contact for escalations is Priya Nandakumar. (Source: First output block)"
+        },
+        "256": {
+          "correct": true,
+          "tokens": 144,
+          "answer": " The replacement contact for escalations is Priya Nandakumar. (Priya Nandakumar)"
+        },
+        "400": {
+          "correct": true,
+          "tokens": 144,
+          "answer": " The replacement contact for escalations is Priya Nandakumar. (Priya Nandakumar)"
+        }
+      }
+    },
+    {
+      "id": "distractor-06",
+      "content_type": "json",
+      "category": "distractor",
+      "question": "What is the ACTIVE promo code this quarter?",
+      "gold": "FALL40",
+      "full": {
+        "correct": false,
+        "tokens": 11233,
+        "answer": " The provided data is a list of object descriptions where each object contains the following properties: id, status (success/failure), amount (dollars), and note (description). These objects relate to transactions or processes within some system (possibly financial or software related). Unfortunately, without additional context it's difficult to provide a specific interpretation. However, here are a few examples of how individual objects within the data can be interpreted:\n\n* Object with id=275 has failed status, indicating that a service encountered an error associated with a policy cache policy timeout. The amount is $579.21 and the note suggests that this affected the gateway service.\n* Object with id=306 has a successful status, meaning the transaction or process was completed successfully. It relates to a retry response in a system service, with an amount of $1302.4.\n* Object with id=295 suggests that there's a retry for a downstream shard user related to a region metric service, but it failed and the associated amount is $2583.72."
+      },
+      "per_budget": {
+        "128": {
+          "correct": true,
+          "tokens": 101,
+          "answer": " The ACTIVE promo code this quarter is \"FALL40\"."
+        },
+        "256": {
+          "correct": true,
+          "tokens": 236,
+          "answer": " The active promo code this quarter is \"FALL40\"."
+        },
+        "400": {
+          "correct": true,
+          "tokens": 236,
+          "answer": " The active promo code this quarter is \"FALL40\"."
+        }
+      }
+    }
+  ]
+}

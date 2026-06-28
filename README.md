@@ -67,33 +67,36 @@ pinpoints it; structured types keep a representative, schema-preserving sample.)
 ## Does compression lose information? (it can *help*)
 
 Throwing away 99% of the tokens is only safe if the model still answers
-correctly. We measure that directly: for **50 curated `(tool output, question,
-gold answer)` cases** across all five content types, a model is asked the
-question twice — once on the **full** output, once on the **tooltrim-compressed**
-output — and accuracy is reported with **Wilson 95% confidence intervals**.
-Reproduce with [`run_faithfulness.py`](run_faithfulness.py) — it runs **offline
-by default (no API key)** and has adapters for Claude / OpenAI / Groq / Ollama.
+correctly. We measure that directly: for **62 curated `(tool output, question,
+gold answer)` cases** across all five content types — including **multi-fact**
+cases (the answer needs several facts from different parts of the output) and
+**distractor** cases (a deprecated value sits next to the current one) — a model
+is asked the question twice: once on the **full** output, once on the
+**tooltrim-compressed** output. Accuracy is reported with **Wilson 95%
+confidence intervals**. Reproduce with [`run_faithfulness.py`](run_faithfulness.py)
+— it runs **offline by default (no API key)** and has adapters for
+Claude / OpenAI / Groq / Ollama.
 
-On a small local model (`llama3.1:8b`), compression doesn't just preserve
-accuracy — it **improves** it, because the model is no longer distracted by
-thousands of tokens of noise:
+On small local models, compression doesn't just preserve accuracy — it
+**improves** it, because the model is no longer distracted by thousands of tokens
+of noise. The effect reproduces across two independent model families:
 
-| condition | tokens/case | accuracy | 95% CI |
-|---|---:|---:|---:|
-| full context | 6,587 | 10/50 (20%) | [11–33%] |
-| **compressed @128** | **76 (−98.8%)** | **37/50 (74%)** | **[60–84%]** |
-| compressed @256 | 159 (−97.6%) | 34/50 (68%) | [54–79%] |
-| compressed @400 | 217 (−96.7%) | 35/50 (70%) | [56–81%] |
+| model | full | @128 (−98.6%) | @256 (−97.3%) | @400 (−96.5%) |
+|---|---:|---:|---:|---:|
+| `mistral:7b`  | 13% [7–23%]  | **84% [73–91%]** | 81% [69–89%] | 82% [71–90%] |
+| `llama3.1:8b` | 23% [14–34%] | **73% [60–82%]** | 66% [54–77%] | 66% [54–77%] |
 
-The intervals don't overlap — at n=50 this is a **significant** improvement, not
-noise. Full provenance and per-case answers are saved as a citable artifact under
-[`benchmarks/runs/`](benchmarks/runs/).
+The compressed intervals don't overlap the full-context intervals — at n=62 this
+is a **significant** improvement for both models, not noise. Full provenance,
+per-case answers, and the cross-model table are saved as citable artifacts under
+[`benchmarks/runs/`](benchmarks/runs/) and [`benchmarks/COMPARISON.md`](benchmarks/COMPARISON.md).
 
-*Stated plainly:* this is one small 8B model. A frontier long-context model
+*Stated plainly:* these are small 7–8B models. A frontier long-context model
 handles the full context far better, so its baseline is higher and the accuracy
 *uplift* shrinks — but the token/cost savings remain. The uplift is largest for
-smaller/cheaper models and longer contexts; n=50 is a pilot, which is why the CIs
-are reported.
+smaller/cheaper models and longer contexts. The harness is wired so a frontier
+run (`--model claude`) drops a new row into the same table when an API key is
+available; n=62 is a pilot, which is why the CIs are reported.
 
 ## Install
 

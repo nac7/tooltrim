@@ -1,0 +1,4 @@
+model,budget,comp_tokens,saved_ratio,accuracy,acc_ci_lo,acc_ci_hi,retention,full_accuracy,full_acc_ci_lo,full_acc_ci_hi,full_avg_tokens,n
+llama3.1:8b,128,94.4,0.9858,0.7258,0.6041,0.8212,3.2143,0.2258,0.1396,0.3441,6634.8,62
+llama3.1:8b,256,177.1,0.9733,0.6613,0.5372,0.7666,2.9286,0.2258,0.1396,0.3441,6634.8,62
+llama3.1:8b,400,229.0,0.9655,0.6613,0.5372,0.7666,2.9286,0.2258,0.1396,0.3441,6634.8,62
