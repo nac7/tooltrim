@@ -2,12 +2,38 @@
 
 from __future__ import annotations
 
+import re
 from typing import List, Sequence
 
 from ..relevance import score_chunks
 from ..tokens import count_tokens
 
 ELISION = "[…]"
+
+# Cap for a single chunk. Anything larger is sub-split so the budgeter can
+# select *within* it — otherwise a newline-free blob (minified JSON-in-a-string,
+# a single huge log line) would be one un-selectable chunk and pass through whole.
+_MAX_CHUNK_TOKENS = 200
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _split_oversize(chunk: str, cap: int = _MAX_CHUNK_TOKENS) -> List[str]:
+    """Break a too-large chunk into sentence-, then word-window-sized pieces."""
+    if count_tokens(chunk) <= cap:
+        return [chunk]
+    pieces: List[str] = []
+    for sent in _SENTENCE.split(chunk):
+        sent = sent.strip()
+        if not sent:
+            continue
+        if count_tokens(sent) <= cap:
+            pieces.append(sent)
+            continue
+        # No usable punctuation (or one runaway sentence): fall back to words.
+        words = sent.split()
+        for i in range(0, len(words), 40):
+            pieces.append(" ".join(words[i : i + 40]))
+    return pieces or [chunk]
 
 
 def split_paragraphs(text: str) -> List[str]:
@@ -17,7 +43,11 @@ def split_paragraphs(text: str) -> List[str]:
     if len(chunks) <= 1:
         # No blank-line structure: fall back to single lines.
         chunks = [ln.strip() for ln in text.splitlines() if ln.strip()]
-    return chunks or ([text.strip()] if text.strip() else [])
+    chunks = chunks or ([text.strip()] if text.strip() else [])
+    out: List[str] = []
+    for ch in chunks:
+        out.extend(_split_oversize(ch))
+    return out
 
 
 def fit_chunks(

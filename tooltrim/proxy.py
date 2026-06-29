@@ -225,10 +225,17 @@ def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool =
                 if self.path.startswith("/v1") else upstream_base.rstrip("/") + self.path
 
             req = urllib.request.Request(upstream, data=body, method="POST")
-            for h in ("Authorization", "Content-Type", "OpenAI-Organization",
-                      "anthropic-version", "x-api-key"):
-                if h in self.headers:
+            # Forward the client's headers, minus hop-by-hop / length ones we
+            # recompute. Crucially this preserves User-Agent and Accept: many
+            # provider edges (Groq/OpenAI/Anthropic sit behind Cloudflare) reject
+            # the default "Python-urllib" UA with an error 1010.
+            _skip = {"host", "content-length", "connection", "transfer-encoding",
+                     "accept-encoding", "keep-alive", "proxy-connection"}
+            for h in self.headers:
+                if h.lower() not in _skip:
                     req.add_header(h, self.headers[h])
+            if not req.has_header("User-agent"):
+                req.add_header("User-Agent", "tooltrim-proxy")
             req.add_header("Content-Length", str(len(body)))
 
             try:

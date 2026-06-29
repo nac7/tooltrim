@@ -57,6 +57,17 @@ def test_text_query_extraction():
     assert "1234-ALPHA" in out
 
 
+def test_text_compresses_single_line_blob():
+    # Regression: a newline-free blob (minified JSON-in-a-string, one huge log
+    # line) used to be one un-selectable chunk and passed through uncompressed.
+    blob = ("routine heartbeat ok, nothing to see here. " * 1500
+            + "the launch code is 1234-ALPHA.")
+    assert count_tokens(blob) > 5000
+    out = text.compress(blob, query="launch code", max_tokens=200)
+    assert count_tokens(out) <= 200
+    assert "1234-ALPHA" in out
+
+
 def test_neighbor_context_included():
     from tooltrim.compressors._budget import fit_chunks
 

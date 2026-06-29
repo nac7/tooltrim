@@ -243,6 +243,12 @@ compresses Anthropic `tool_result` blocks. The proxy is stdlib-only and **fails
 open**: if anything goes wrong it forwards the original request untouched, so it
 never breaks a production call.
 
+**Online, it also keeps you under provider rate limits.** Against a live hosted
+model (Groq free tier, 6,000-tokens-per-request cap), **45% of raw tool outputs
+are rejected (HTTP 413) but 100% of tooltrim-compressed calls fit** — a 14,415-token
+result is compressed to 26 tokens in flight and the call succeeds. See
+[`benchmarks/ONLINE_GROQ.md`](benchmarks/ONLINE_GROQ.md).
+
 ## How it works
 
 1. **Pass-through** if the output already fits the budget (zero overhead).
