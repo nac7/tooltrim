@@ -35,6 +35,9 @@ redis = ["redis>=4"]
 s3 = ["boto3>=1.26"]
 dev = ["pytest>=7", "tiktoken>=0.5"]
 
+[project.scripts]
+tooltrim = "tooltrim.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/nac7/tooltrim"
 Repository = "https://github.com/nac7/tooltrim"

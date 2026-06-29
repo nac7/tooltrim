@@ -105,7 +105,18 @@ pip install tooltrim          # zero-dependency core (heuristic token counts)
 pip install tooltrim[tokens]  # add tiktoken for exact token counts
 ```
 
-## Usage
+Extras: `tooltrim[langchain]`, `tooltrim[redis]`, `tooltrim[s3]`.
+
+## CLI
+
+```bash
+tooltrim demo                                   # 10-second self-contained savings tour
+cat big.json | tooltrim compress -q "refund status" --stats   # pipe in, compressed out
+tooltrim compress page.html -q "rate limits" -m 400
+tooltrim proxy --upstream https://api.openai.com/v1           # run the proxy
+```
+
+## Usage (library)
 
 ### 1. Decorate a tool
 
