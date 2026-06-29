@@ -34,7 +34,8 @@ from .decorators import (
 )
 from .detect import detect_type
 from .llm import LLMDistiller
-from .store import OutputStore
+from .metrics import Metrics
+from .store import BaseStore, FileStore, OutputStore, RedisStore, S3Store
 from .tokens import count_tokens, using_exact_counts
 
 __version__ = "0.1.0"
@@ -48,6 +49,11 @@ __all__ = [
     "query_scope",
     "current_query",
     "OutputStore",
+    "BaseStore",
+    "FileStore",
+    "RedisStore",
+    "S3Store",
+    "Metrics",
     "LLMDistiller",
     "detect_type",
     "count_tokens",

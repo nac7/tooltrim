@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 from .detect import detect_type
-from .store import OutputStore
+from .store import BaseStore, OutputStore
 from .tokens import count_tokens
 from .compressors import html as _html
 from .compressors import json_ as _json
@@ -77,14 +77,14 @@ class ToolCompressor:
         self,
         max_tokens: int = 512,
         *,
-        store: Optional[OutputStore] = "default",  # type: ignore[assignment]
+        store: Optional[BaseStore] = "default",  # type: ignore[assignment]
         add_footer: bool = True,
         footer_template: Optional[str] = None,
     ) -> None:
         self.max_tokens = max_tokens
         if store == "default":
             store = OutputStore()
-        self.store: Optional[OutputStore] = store
+        self.store: Optional[BaseStore] = store
         self.add_footer = add_footer
         self.footer_template = footer_template or (
             "\n\n[tooltrim: compressed {original}->{compressed} tokens "

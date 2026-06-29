@@ -17,6 +17,7 @@ Anthropic:
 
 The proxy routes by path: `/v1/chat/completions` compresses OpenAI
 role:"tool" messages; `/v1/messages` compresses Anthropic tool_result blocks.
+Prometheus metrics are served at `GET /metrics`.
 """
 
 from __future__ import annotations

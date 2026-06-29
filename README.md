@@ -249,6 +249,32 @@ are rejected (HTTP 413) but 100% of tooltrim-compressed calls fit** — a 14,415
 result is compressed to 26 tokens in flight and the call succeeds. See
 [`benchmarks/ONLINE_GROQ.md`](benchmarks/ONLINE_GROQ.md).
 
+### 7. Scale out — shared expand-store + metrics
+
+The default expand-store is in-process, fine for one worker. To run multiple
+workers/replicas behind a load balancer, the store must be **shared** — otherwise
+a `ref` minted by one worker can't be expanded by another. Swap in a backend
+(all are content-addressed, so writes dedup automatically):
+
+```python
+from tooltrim import ToolCompressor, FileStore, RedisStore, S3Store
+
+tc = ToolCompressor(store=FileStore("/mnt/shared/tooltrim"))         # zero-dep, shared volume
+tc = ToolCompressor(store=RedisStore(url="redis://cache:6379/0",     # pip install tooltrim[redis]
+                                     ttl_seconds=86_400))
+tc = ToolCompressor(store=S3Store(bucket="my-bucket"))               # pip install tooltrim[s3]
+```
+
+The proxy exposes **Prometheus metrics** at `GET /metrics` (tokens in/out/saved,
+messages compressed, fail-open count, upstream errors, latency) — scrape it to
+quantify savings fleet-wide:
+
+```
+tooltrim_tokens_saved_total 14389
+tooltrim_messages_compressed_total 1
+tooltrim_fail_open_total 0
+```
+
 ## How it works
 
 1. **Pass-through** if the output already fits the budget (zero overhead).
@@ -281,13 +307,14 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic zero-dependency core, 66-test suite, reproducible token +
+v0.1 — deterministic zero-dependency core, 79-test suite, reproducible token +
 **faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
-both **OpenAI and Anthropic** wire formats, a **LangChain** adapter, and citable
-run artifacts under [`benchmarks/`](benchmarks/).
+both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**, a
+**LangChain** adapter, pluggable **File/Redis/S3 expand-stores** for horizontal
+scale, and citable run artifacts under [`benchmarks/`](benchmarks/).
 
-Roadmap: frontier-model faithfulness runs, embedding-based relevance, streaming
-compression, a pluggable Redis/S3 expand-store for horizontal scale, and native
-LlamaIndex / OpenAI-Agents wrappers.
+Roadmap: PyPI release + `tooltrim` CLI, frontier-model faithfulness runs,
+embedding-based relevance, streaming compression, and native LlamaIndex /
+OpenAI-Agents wrappers.
 
 Contributions and benchmark cases welcome. MIT licensed.

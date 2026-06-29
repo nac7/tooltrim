@@ -34,6 +34,7 @@ class CompressionStats:
     original_tokens: int = 0
     compressed_tokens: int = 0
     messages_compressed: int = 0
+    failed_open: bool = False  # an error forced an untouched passthrough
 
     @property
     def saved_tokens(self) -> int:
@@ -194,15 +195,21 @@ def transform_request_body(raw: bytes, compressor: ToolCompressor,
         payload["messages"] = new_messages
         return json.dumps(payload).encode("utf-8"), stats
     except Exception:
-        return raw, CompressionStats()
+        return raw, CompressionStats(failed_open=True)
 
 
 # --- HTTP server ---------------------------------------------------------------
 
-def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool = True):
+def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool = True,
+                 metrics=None):
+    import time
     import urllib.error
     import urllib.request
     from http.server import BaseHTTPRequestHandler
+
+    from .metrics import default_metrics
+
+    metrics = metrics if metrics is not None else default_metrics
 
     class _Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -210,7 +217,23 @@ def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool =
         def log_message(self, *args):  # silence default noisy logging
             pass
 
+        def _send(self, code: int, body: bytes, content_type: str) -> None:
+            self.send_response(code)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self) -> None:  # noqa: N802
+            if self.path.rstrip("/").endswith("/metrics"):
+                self._send(200, metrics.render().encode("utf-8"),
+                           "text/plain; version=0.0.4")
+            else:
+                self._send(404, b'{"error":"not found"}', "application/json")
+
         def _proxy(self) -> None:
+            t0 = time.monotonic()
+            upstream_error = False
             length = int(self.headers.get("Content-Length", "0") or "0")
             raw = self.rfile.read(length) if length else b""
 
@@ -257,6 +280,7 @@ def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool =
                 self.end_headers()
                 self.wfile.write(data)
             except Exception as e:  # upstream unreachable
+                upstream_error = True
                 msg = json.dumps({"error": {"message": f"tooltrim proxy: {e}"}}).encode()
                 self.send_response(502)
                 self.send_header("Content-Type", "application/json")
@@ -264,6 +288,14 @@ def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool =
                 self.end_headers()
                 self.wfile.write(msg)
 
+            metrics.record(
+                messages=stats.messages_compressed,
+                tokens_in=stats.original_tokens,
+                tokens_out=stats.compressed_tokens,
+                latency_s=time.monotonic() - t0,
+                fail_open=stats.failed_open,
+                upstream_error=upstream_error,
+            )
             if verbose and stats.messages_compressed:
                 print(f"[tooltrim] {stats.messages_compressed} tool msg(s): "
                       f"{stats.original_tokens}->{stats.compressed_tokens} tokens "
@@ -276,16 +308,19 @@ def make_handler(compressor: ToolCompressor, upstream_base: str, verbose: bool =
 
 
 def serve(host: str = "127.0.0.1", port: int = 8800, *,
-          max_tokens: int = 512, upstream_base: Optional[str] = None) -> None:
+          max_tokens: int = 512, upstream_base: Optional[str] = None,
+          store=None, add_footer: bool = False, metrics=None) -> None:
     from http.server import ThreadingHTTPServer
 
     upstream = upstream_base or os.environ.get(
         "TOOLTRIM_UPSTREAM_BASE_URL", "https://api.openai.com/v1")
-    compressor = ToolCompressor(max_tokens=max_tokens, add_footer=False)
-    handler = make_handler(compressor, upstream)
+    compressor = ToolCompressor(max_tokens=max_tokens, add_footer=add_footer,
+                                store=store)
+    handler = make_handler(compressor, upstream, metrics=metrics)
     server = ThreadingHTTPServer((host, port), handler)
     print(f"tooltrim proxy on http://{host}:{port}/v1  ->  {upstream}  "
-          f"(budget={max_tokens} tok/tool-result)", flush=True)
+          f"(budget={max_tokens} tok/tool-result)\n"
+          f"  metrics: http://{host}:{port}/metrics (Prometheus)", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
