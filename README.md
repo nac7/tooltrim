@@ -355,6 +355,19 @@ tc = ToolCompressor(max_tokens=400,
                     scorer=EmbeddingScorer(embed=my_client.embed))
 ```
 
+### Streaming (bounded memory)
+
+Some outputs are too big to hold in memory — a multi-GB log, a subprocess's
+stdout, an HTTP stream. `compress_stream` consumes an iterable incrementally with
+**constant memory** (bounded head/tail/top-K/important-line buffers), then fits
+the survivors to the budget:
+
+```python
+from tooltrim import compress_stream
+
+text = compress_stream(open("huge.log"), max_tokens=400, query="disk error")
+```
+
 ## How it's different
 
 | Tool class           | What it optimizes            | tooltrim |
@@ -374,9 +387,11 @@ v0.1 — deterministic zero-dependency core, 91-test suite, reproducible token +
 both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
 **LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, pluggable
 **File/Redis/S3 expand-stores** for horizontal scale, optional **embedding-based
-relevance**, a `tooltrim` **CLI**, and citable run artifacts under
-[`benchmarks/`](benchmarks/). Published on [PyPI](https://pypi.org/project/tooltrim/).
+relevance**, **streaming** compression for outputs too big to hold in memory, a
+`tooltrim` **CLI**, and citable run artifacts under [`benchmarks/`](benchmarks/).
+Published on [PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: frontier-model faithfulness runs and streaming compression.
+Roadmap: frontier-model faithfulness runs, embedding relevance benchmarks, and
+native streaming passthrough in the proxy.
 
 Contributions and benchmark cases welcome. MIT licensed.
