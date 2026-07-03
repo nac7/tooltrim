@@ -247,7 +247,24 @@ A LlamaIndex tool returns a `ToolOutput`; only its `content` (what the LLM reads
 is compressed — the structured `raw_output` is preserved. See
 [`examples/05_llamaindex_tool.py`](examples/05_llamaindex_tool.py).
 
-### 7. Or run it as a proxy — zero code changes
+### 7. Or the OpenAI Agents SDK — same one-liner
+
+```bash
+pip install tooltrim[openai-agents]
+```
+
+```python
+from tooltrim.integrations import compress_openai_agents_tool, compress_openai_agents_tools
+
+fetch = compress_openai_agents_tool(my_tool, max_tokens=400,
+                                    query_from=lambda url: url)
+tools = compress_openai_agents_tools(my_tools, max_tokens=400)
+```
+
+Only the tool's `on_invoke_tool` is wrapped — name, JSON schema, and guardrails
+are preserved. See [`examples/06_openai_agents_tool.py`](examples/06_openai_agents_tool.py).
+
+### 8. Or run it as a proxy — zero code changes
 
 Point your client at the tooltrim proxy; every tool result is compressed (using
 the latest user message as the relevance query) before being forwarded upstream.
@@ -278,7 +295,7 @@ are rejected (HTTP 413) but 100% of tooltrim-compressed calls fit** — a 14,415
 result is compressed to 26 tokens in flight and the call succeeds. See
 [`benchmarks/ONLINE_GROQ.md`](benchmarks/ONLINE_GROQ.md).
 
-### 8. Scale out — shared expand-store + metrics
+### 9. Scale out — shared expand-store + metrics
 
 The default expand-store is in-process, fine for one worker. To run multiple
 workers/replicas behind a load balancer, the store must be **shared** — otherwise
@@ -339,12 +356,12 @@ token sink in agentic apps — and works alongside all of the above.
 v0.1 — deterministic zero-dependency core, 85-test suite, reproducible token +
 **faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
 both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
-**LangChain** and **LlamaIndex** adapters, pluggable **File/Redis/S3
-expand-stores** for horizontal scale, a `tooltrim` **CLI**, and citable run
-artifacts under [`benchmarks/`](benchmarks/). Published on
+**LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, pluggable
+**File/Redis/S3 expand-stores** for horizontal scale, a `tooltrim` **CLI**, and
+citable run artifacts under [`benchmarks/`](benchmarks/). Published on
 [PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: frontier-model faithfulness runs, embedding-based relevance, streaming
-compression, and an OpenAI-Agents wrapper.
+Roadmap: frontier-model faithfulness runs, embedding-based relevance, and
+streaming compression.
 
 Contributions and benchmark cases welcome. MIT licensed.
