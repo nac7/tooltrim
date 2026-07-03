@@ -96,6 +96,32 @@ def _cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_mcp(args: argparse.Namespace) -> int:
+    if not args.command_argv:
+        print("usage: tooltrim mcp [--max-tokens N] -- <upstream server command...>\n"
+              "example: tooltrim mcp -- npx -y @modelcontextprotocol/server-filesystem /tmp",
+              file=sys.stderr)
+        return 2
+    try:
+        import asyncio
+
+        from mcp.client.stdio import StdioServerParameters
+
+        from .integrations.mcp import run_stdio_gateway
+    except ImportError:
+        print("Install MCP support:  pip install tooltrim[mcp]", file=sys.stderr)
+        return 1
+
+    argv = args.command_argv
+    if argv and argv[0] == "--":
+        argv = argv[1:]
+    params = StdioServerParameters(command=argv[0], args=list(argv[1:]))
+    print(f"tooltrim MCP gateway -> {' '.join(argv)}  "
+          f"(budget={args.max_tokens} tok/tool-result)", file=sys.stderr)
+    asyncio.run(run_stdio_gateway(params, max_tokens=args.max_tokens))
+    return 0
+
+
 def _cmd_version(args: argparse.Namespace) -> int:
     print(f"tooltrim {__version__}")
     return 0
@@ -138,6 +164,13 @@ def build_parser() -> argparse.ArgumentParser:
     d = sub.add_parser("demo", help="self-contained 10-second savings demo")
     d.add_argument("-m", "--max-tokens", type=int, default=400)
     d.set_defaults(func=_cmd_demo)
+
+    mc = sub.add_parser("mcp", help="run a compressing MCP gateway over stdio")
+    mc.add_argument("-m", "--max-tokens", type=int, default=512,
+                    help="token budget per tool result")
+    mc.add_argument("command_argv", nargs=argparse.REMAINDER,
+                    help="-- then the upstream MCP server command and args")
+    mc.set_defaults(func=_cmd_mcp)
 
     v = sub.add_parser("version", help="print the version")
     v.set_defaults(func=_cmd_version)

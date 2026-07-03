@@ -32,3 +32,9 @@ def test_compress_file_query_aware(tmp_path, capsys):
 def test_no_subcommand_prints_help(capsys):
     assert main([]) == 1
     assert "usage" in capsys.readouterr().out.lower()
+
+
+def test_mcp_without_upstream_command_returns_usage(capsys):
+    # no upstream server command -> usage error (exit 2), no gateway started
+    assert main(["mcp"]) == 2
+    assert "upstream" in capsys.readouterr().err.lower()

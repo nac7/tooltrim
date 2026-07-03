@@ -16,7 +16,8 @@ def web_fetch(url: str) -> str:
 
 - **Zero dependencies** in the core. Pure-stdlib, deterministic, reproducible.
 - **Provider-agnostic.** Works with OpenAI, Anthropic, local models, LangChain,
-  LlamaIndex, raw function-calling — anything. It compresses *strings*, not APIs.
+  LlamaIndex, OpenAI-Agents, MCP, raw function-calling — anything. It compresses
+  *strings*, not APIs.
 - **Lossless by reference.** Compression is extractive, and the full output stays
   retrievable via a short `ref` — so it's compression *plus retrieval*, not
   blind truncation.
@@ -264,7 +265,32 @@ tools = compress_openai_agents_tools(my_tools, max_tokens=400)
 Only the tool's `on_invoke_tool` is wrapped — name, JSON schema, and guardrails
 are preserved. See [`examples/06_openai_agents_tool.py`](examples/06_openai_agents_tool.py).
 
-### 8. Or run it as a proxy — zero code changes
+### 8. Or at the MCP boundary — a compressing gateway
+
+[MCP](https://modelcontextprotocol.io) tool results (`tools/call`) are exactly
+the bloated outputs tooltrim targets. Run a gateway in front of any MCP server and
+point your MCP client (Claude Desktop, an IDE, an agent) at it — every result is
+compressed in flight, no code change:
+
+```bash
+pip install tooltrim[mcp]
+tooltrim mcp -- npx -y @modelcontextprotocol/server-filesystem /path
+```
+
+Or wrap the result-handling in your own server:
+
+```python
+from tooltrim.integrations import compressing_call_tool, compress_tool_result
+
+# wrap an upstream call_tool coroutine...
+call = compressing_call_tool(session.call_tool, max_tokens=400)
+# ...or compress a single CallToolResult (errors / non-text pass through)
+result = compress_tool_result(result, compressor=tc, query=query)
+```
+
+See [`examples/08_mcp_gateway.py`](examples/08_mcp_gateway.py).
+
+### 9. Or run it as a proxy — zero code changes
 
 Point your client at the tooltrim proxy; every tool result is compressed (using
 the latest user message as the relevance query) before being forwarded upstream.
@@ -295,7 +321,7 @@ are rejected (HTTP 413) but 100% of tooltrim-compressed calls fit** — a 14,415
 result is compressed to 26 tokens in flight and the call succeeds. See
 [`benchmarks/ONLINE_GROQ.md`](benchmarks/ONLINE_GROQ.md).
 
-### 9. Scale out — shared expand-store + metrics
+### 10. Scale out — shared expand-store + metrics
 
 The default expand-store is in-process, fine for one worker. To run multiple
 workers/replicas behind a load balancer, the store must be **shared** — otherwise
@@ -382,16 +408,17 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic zero-dependency core, 91-test suite, reproducible token +
+v0.2 — deterministic zero-dependency core, 104-test suite, reproducible token +
 **faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
 both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
-**LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, pluggable
-**File/Redis/S3 expand-stores** for horizontal scale, optional **embedding-based
-relevance**, **streaming** compression for outputs too big to hold in memory, a
-`tooltrim` **CLI**, and citable run artifacts under [`benchmarks/`](benchmarks/).
-Published on [PyPI](https://pypi.org/project/tooltrim/).
+**LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, an **MCP**
+compressing gateway, pluggable **File/Redis/S3 expand-stores** for horizontal
+scale, optional **embedding-based relevance**, **streaming** compression for
+outputs too big to hold in memory, a `tooltrim` **CLI**, and citable run
+artifacts under [`benchmarks/`](benchmarks/). Published on
+[PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: frontier-model faithfulness runs, embedding relevance benchmarks, and
-native streaming passthrough in the proxy.
+Roadmap: frontier-model faithfulness runs, a tool-output faithfulness benchmark
+release, and native streaming passthrough in the proxy.
 
 Contributions and benchmark cases welcome. MIT licensed.
