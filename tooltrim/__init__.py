@@ -33,8 +33,10 @@ from .decorators import (
     wrap_tool,
 )
 from .detect import detect_type
+from .embeddings import EmbeddingScorer
 from .llm import LLMDistiller
 from .metrics import Metrics
+from .relevance import BM25Scorer, score_chunks, using_scorer
 from .store import BaseStore, FileStore, OutputStore, RedisStore, S3Store
 from .tokens import count_tokens, using_exact_counts
 
@@ -54,6 +56,10 @@ __all__ = [
     "RedisStore",
     "S3Store",
     "Metrics",
+    "BM25Scorer",
+    "EmbeddingScorer",
+    "using_scorer",
+    "score_chunks",
     "LLMDistiller",
     "detect_type",
     "count_tokens",

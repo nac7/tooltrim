@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 from .detect import detect_type
+from .relevance import using_scorer
 from .store import BaseStore, OutputStore
 from .tokens import count_tokens
 from .compressors import html as _html
@@ -80,11 +81,15 @@ class ToolCompressor:
         store: Optional[BaseStore] = "default",  # type: ignore[assignment]
         add_footer: bool = True,
         footer_template: Optional[str] = None,
+        scorer: Optional[Callable] = None,
     ) -> None:
         self.max_tokens = max_tokens
         if store == "default":
             store = OutputStore()
         self.store: Optional[BaseStore] = store
+        # Relevance scorer (None = default BM25). An EmbeddingScorer here makes
+        # every content type semantic; threaded via a contextvar at compress time.
+        self.scorer = scorer
         self.add_footer = add_footer
         self.footer_template = footer_template or (
             "\n\n[tooltrim: compressed {original}->{compressed} tokens "
@@ -113,7 +118,8 @@ class ToolCompressor:
         compressor = _COMPRESSORS.get(ctype, _text.compress)
         # Leave headroom for the footer line.
         body_budget = max(16, budget - (24 if self.add_footer else 0))
-        body = compressor(text, query, body_budget)
+        with using_scorer(self.scorer):
+            body = compressor(text, query, body_budget)
 
         ref = self.store.put(text) if self.store is not None else None
 

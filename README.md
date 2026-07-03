@@ -333,11 +333,27 @@ tooltrim_fail_open_total 0
    - **Tabular** — keep the header + a sample of rows + `(+N more rows)`.
    - **Logs** — collapse repeated lines (`x42`), always keep errors/warnings,
      fill with head/tail context.
-   - **Text** — query-aware extractive selection (BM25), with `[…]` elisions.
+   - **Text** — query-aware extractive selection (BM25 or embeddings), `[…]` elisions.
 4. **Stash** the full output under a content-addressed `ref` for `expand()`.
 
 With a query, every compressor keeps the most *relevant* parts; without one, it
 falls back to structure-preserving head/tail selection.
+
+### Semantic relevance (optional)
+
+Scoring defaults to lexical **BM25** (zero-dependency). For semantic matching —
+so a query for `"car"` keeps a chunk about `"automobiles"` — pass an
+`EmbeddingScorer`. It's provider-agnostic: give it any `embed(texts) -> vectors`
+callable (OpenAI, Cohere, local), or let it load `sentence-transformers`
+(`pip install tooltrim[embeddings]`). The scorer threads through **every** content
+type:
+
+```python
+from tooltrim import ToolCompressor, EmbeddingScorer
+
+tc = ToolCompressor(max_tokens=400,
+                    scorer=EmbeddingScorer(embed=my_client.embed))
+```
 
 ## How it's different
 
@@ -353,15 +369,14 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic zero-dependency core, 85-test suite, reproducible token +
+v0.1 — deterministic zero-dependency core, 91-test suite, reproducible token +
 **faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
 both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
 **LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, pluggable
-**File/Redis/S3 expand-stores** for horizontal scale, a `tooltrim` **CLI**, and
-citable run artifacts under [`benchmarks/`](benchmarks/). Published on
-[PyPI](https://pypi.org/project/tooltrim/).
+**File/Redis/S3 expand-stores** for horizontal scale, optional **embedding-based
+relevance**, a `tooltrim` **CLI**, and citable run artifacts under
+[`benchmarks/`](benchmarks/). Published on [PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: frontier-model faithfulness runs, embedding-based relevance, and
-streaming compression.
+Roadmap: frontier-model faithfulness runs and streaming compression.
 
 Contributions and benchmark cases welcome. MIT licensed.
