@@ -27,28 +27,8 @@ from __future__ import annotations
 from typing import Any, Callable, List, Optional
 
 from ..core import ToolCompressor
-from ..decorators import current_query
-
-
-def _compressed_output(output: Any, compressor: ToolCompressor,
-                       query: Optional[str]) -> Any:
-    """Compress a tool result if it's a string; pass anything else through.
-
-    Pure (no LangChain) so it can be unit-tested without the framework.
-    """
-    if isinstance(output, str) and output:
-        return compressor.compress(output, query=query).text
-    return output
-
-
-def _resolve_query(query_from: Optional[Callable[..., str]],
-                   kwargs: dict) -> Optional[str]:
-    if query_from is not None:
-        try:
-            return query_from(**kwargs)
-        except Exception:
-            return None
-    return current_query()
+from ._common import compressed_output as _compressed_output
+from ._common import resolve_query as _resolve_query
 
 
 def compress_langchain_tool(

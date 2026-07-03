@@ -8,5 +8,11 @@ pulls in LangChain/LlamaIndex/etc. Install the matching extra to use one, e.g.
 from __future__ import annotations
 
 from .langchain import compress_langchain_tool, compress_langchain_tools
+from .llamaindex import compress_llamaindex_tool, compress_llamaindex_tools
 
-__all__ = ["compress_langchain_tool", "compress_langchain_tools"]
+__all__ = [
+    "compress_langchain_tool",
+    "compress_langchain_tools",
+    "compress_llamaindex_tool",
+    "compress_llamaindex_tools",
+]

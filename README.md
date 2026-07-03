@@ -229,7 +229,25 @@ tools = compress_langchain_tools(my_tools, max_tokens=400)
 
 See [`examples/03_langchain_tool.py`](examples/03_langchain_tool.py).
 
-### 6. Or run it as a proxy — zero code changes
+### 6. Or LlamaIndex — same one-liner
+
+```bash
+pip install tooltrim[llamaindex]
+```
+
+```python
+from tooltrim.integrations import compress_llamaindex_tool, compress_llamaindex_tools
+
+fetch = compress_llamaindex_tool(my_tool, max_tokens=400,
+                                 query_from=lambda topic: topic)
+tools = compress_llamaindex_tools(my_tools, max_tokens=400)
+```
+
+A LlamaIndex tool returns a `ToolOutput`; only its `content` (what the LLM reads)
+is compressed — the structured `raw_output` is preserved. See
+[`examples/05_llamaindex_tool.py`](examples/05_llamaindex_tool.py).
+
+### 7. Or run it as a proxy — zero code changes
 
 Point your client at the tooltrim proxy; every tool result is compressed (using
 the latest user message as the relevance query) before being forwarded upstream.
@@ -260,7 +278,7 @@ are rejected (HTTP 413) but 100% of tooltrim-compressed calls fit** — a 14,415
 result is compressed to 26 tokens in flight and the call succeeds. See
 [`benchmarks/ONLINE_GROQ.md`](benchmarks/ONLINE_GROQ.md).
 
-### 7. Scale out — shared expand-store + metrics
+### 8. Scale out — shared expand-store + metrics
 
 The default expand-store is in-process, fine for one worker. To run multiple
 workers/replicas behind a load balancer, the store must be **shared** — otherwise
@@ -318,14 +336,15 @@ token sink in agentic apps — and works alongside all of the above.
 
 ## Status
 
-v0.1 — deterministic zero-dependency core, 79-test suite, reproducible token +
+v0.1 — deterministic zero-dependency core, 85-test suite, reproducible token +
 **faithfulness** benchmarks (with Wilson CIs, cross-model), a **proxy** speaking
-both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**, a
-**LangChain** adapter, pluggable **File/Redis/S3 expand-stores** for horizontal
-scale, and citable run artifacts under [`benchmarks/`](benchmarks/).
+both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
+**LangChain** and **LlamaIndex** adapters, pluggable **File/Redis/S3
+expand-stores** for horizontal scale, a `tooltrim` **CLI**, and citable run
+artifacts under [`benchmarks/`](benchmarks/). Published on
+[PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: PyPI release + `tooltrim` CLI, frontier-model faithfulness runs,
-embedding-based relevance, streaming compression, and native LlamaIndex /
-OpenAI-Agents wrappers.
+Roadmap: frontier-model faithfulness runs, embedding-based relevance, streaming
+compression, and an OpenAI-Agents wrapper.
 
 Contributions and benchmark cases welcome. MIT licensed.
