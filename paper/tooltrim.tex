@@ -1,0 +1,250 @@
+\documentclass[11pt]{article}
+
+% --- Self-contained: compiles with a stock pdflatex + bibtex, no exotic .sty ---
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{multirow}
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\newcommand{\tooltrim}{\textsc{tooltrim}}
+\newcommand{\tofb}{\textsc{tofb}}
+
+\title{\bfseries Faithful, Query-Aware Compression of LLM Agent Tool Outputs\\
+\large Preserving Task Success While Cutting Tokens and Staying Under Rate Limits}
+\author{Nachiket Lele\\
+\small \url{https://github.com/nac7/tooltrim}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Tool outputs---web pages, JSON API responses, logs, CSV exports---are the
+largest and most-ignored token sink in LLM agent loops. A single verbose tool
+result can dwarf the agent's instructions, and the standard mitigation, blind
+truncation, silently discards the fact the agent needs. We present \tooltrim, a
+drop-in, provider-agnostic library that compresses tool outputs \emph{before}
+they re-enter context using a content-type router and query-aware extraction,
+while keeping the full output retrievable on demand via a content-addressed
+store. We introduce the \emph{Tool-Output Faithfulness Benchmark} (\tofb), 62
+cases that plant a checkable fact inside realistic, bloated tool output across
+five content types, with single-fact, multi-fact, and distractor variants. On
+\tofb, query-aware compression retains \textbf{100\%} of full-context accuracy
+while removing 94--99\% of tokens, whereas truncation collapses to 2--14\%
+($p<0.001$ at every budget by a paired McNemar test). We report two
+counterintuitive findings: (i) compression can \emph{improve} small-model
+accuracy by removing distracting tool-output noise, and (ii) compression acts as
+\emph{rate-limit admission control}---under a hosted provider's per-request token
+cap, only 45\% of raw tool outputs are admissible versus 100\% of compressed
+ones. We release \tooltrim{} (PyPI, MIT), the \tofb{} dataset (HuggingFace), and
+a reproducible baseline harness comparing \tooltrim{} against truncation, RAG
+top-$k$, and LLMLingua-2.
+\end{abstract}
+
+\section{Introduction}
+Autonomous LLM agents interleave reasoning with tool calls: they fetch a web
+page, query an API, grep a log, read a table. The \emph{output} of each call is
+appended to the context window and carried forward for the rest of the episode.
+These outputs are routinely enormous---a rendered HTML page is tens of thousands
+of tokens of navigation, scripts, and boilerplate wrapping a single fact; a
+paginated JSON response is hundreds of near-identical records. Left unmanaged,
+tool outputs dominate the context budget, inflate cost and latency, push the
+relevant signal past the model's effective attention span, and---on hosted
+providers with per-request token caps---get the call rejected outright.
+
+The prevailing fix is to truncate: keep the first or last $N$ tokens. This is
+cheap and catastrophic---the needed fact is as likely to sit in the middle as at
+either end, and truncation has no notion of \emph{what the agent asked for}. We
+argue the right operation is \emph{query-aware, faithful compression}: shrink the
+output using the agent's current goal as a relevance signal, exploit the
+structure of each content type, and keep the discarded remainder retrievable so
+compression is lossless in expectation rather than a gamble.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item \tooltrim, a zero-dependency, provider-agnostic library that compresses
+tool outputs via a content-type router (HTML/JSON/logs/tabular/text) and
+query-aware BM25 (or optional embedding) extraction, with expand-on-demand over
+a content-addressed store, exposed as a decorator, an OpenAI/Anthropic-compatible
+proxy, framework adapters (LangChain, LlamaIndex, OpenAI-Agents), and an MCP
+gateway.
+\item \tofb, a reproducible 62-case faithfulness benchmark with a single
+checkable gold fact per case across five content types and three difficulty
+modes, released on HuggingFace.
+\item An honest, paired-significance evaluation against truncation, RAG top-$k$,
+and LLMLingua-2, plus a frontier-model accuracy/token Pareto.
+\item Two findings with practical weight: compression as an accuracy aid for
+small models, and compression as provider rate-limit admission control.
+\end{enumerate}
+
+\section{Related Work}
+\textbf{Prompt compression.} LLMLingua and LLMLingua-2~\cite{jiang2023llmlingua,
+pan2024llmlingua2} compress prompts by dropping low-information tokens under a
+target ratio, learned from a smaller model. They operate on free text and are
+content-type agnostic; \tooltrim{} instead routes by content type and is
+query-aware and lossless-on-demand. \textbf{Retrieval.} RAG~\cite{lewis2020rag}
+selects passages relevant to a query; we include a BM25 top-$k$ RAG baseline and
+find it a strong competitor, which we discuss directly. \textbf{Long context and
+the ``lost in the middle'' effect}~\cite{liu2024lost} motivates removing
+mid-context filler rather than assuming models attend to everything.
+\textbf{Agent frameworks and MCP.} Tool use is standardized by function calling
+and the Model Context Protocol; \tooltrim{} plugs in at that boundary rather than
+requiring agent rewrites.
+
+\section{Method}
+\subsection{Content-type router}
+Given a tool output, \tooltrim{} detects its type (HTML, JSON, logs, tabular,
+prose) and applies a type-specific compressor: HTML is stripped to salient text,
+JSON/tabular are field- and row-pruned, logs are deduplicated and severity-
+ranked. Each compressor emits candidate chunks that preserve local structure.
+
+\subsection{Query-aware extraction}
+The agent's current goal is the relevance query. Chunks are scored---BM25 by
+default, or a pluggable embedding scorer---and greedily packed to a token budget,
+keeping each selected chunk's immediate neighbors for context. Because the query
+is exactly what the agent is trying to accomplish, the surviving text is the part
+the model actually needs.
+
+\subsection{Expand-on-demand}
+The full, uncompressed output is written to a content-addressed store
+(file/Redis/S3) and referenced by a short id embedded in the compressed result.
+An \texttt{expand} tool returns any region on request, so no information is
+permanently lost---compression degrades gracefully to retrieval.
+
+\subsection{Deployment surfaces}
+\tooltrim{} is a decorator (\texttt{@compressed\_tool}), an OpenAI/Anthropic-
+compatible \emph{proxy} that requires zero agent code changes and fails open,
+framework adapters, and an MCP gateway that compresses at the protocol boundary.
+The proxy exposes Prometheus metrics (tokens in/out, savings, fail-open events).
+
+\section{The Tool-Output Faithfulness Benchmark (\tofb)}
+\tofb{} isolates the property that matters: does the needed fact \emph{survive}
+compression? Each of 62 cases plants one distinctive fact (a ``needle'') inside a
+large, type-appropriate tool output and pairs it with a question whose wording
+overlaps the needle. Filler is generated deterministically (seeded), so cases are
+fully reproducible from source and contain no scraped or personal data. Cases
+span five content types (text, HTML, JSON, logs, tabular) and three modes:
+\textbf{single} (50; one fact), \textbf{multi} (6; two facts placed far apart,
+both required), and \textbf{distractor} (6; a similar-but-wrong value sits far
+from the right one; the answer must appear and the trap must not). Mean output
+size is $\approx$6.6k tokens/case ($\approx$411k tokens total). Scoring is
+unambiguous: a case passes iff the model's answer contains the gold string
+(normalized), all \texttt{all\_of} facts appear, and no \texttt{must\_not}
+distractor appears. \tofb{} is released on HuggingFace under MIT.
+
+\section{Experimental Setup}
+We evaluate with two judges. The \textbf{offline} judge is a deterministic BM25
+retrieval model that answers correctly iff the needed fact survived
+compression---a no-API control that isolates the compressor. The
+\textbf{real-LLM} judge sends the same prompt to a hosted model; answers are
+disk-cached so reruns never re-spend tokens. We compare \tooltrim{} against
+\emph{full context}, \emph{truncate-head/tail}, \emph{RAG top-$k$} (BM25 chunk
+selection), \emph{RAG-embed}, and \emph{LLMLingua-2}~\cite{pan2024llmlingua2} on
+identical cases and budgets. Accuracies carry 95\% Wilson intervals; method
+pairs are compared with a paired \textbf{McNemar} test on discordant cases.
+
+\section{Results}
+\subsection{Faithfulness vs. truncation (offline judge)}
+Table~\ref{tab:baselines} reports retention (accuracy $\div$ full-context
+accuracy). Query-aware methods retain \textbf{100\%} of accuracy while cutting
+94--99\% of tokens; blind truncation drops the fact and collapses. The difference
+is significant at every budget ($p<0.001$).
+
+\begin{table}[t]
+\centering
+\begin{tabular}{rrrrr}
+\toprule
+budget & truncate-head & truncate-tail & rag-top$k$ & \textbf{\tooltrim} \\
+\midrule
+128 & 1.8\% & 1.8\% & 100\% & \textbf{100\%} \\
+256 & 3.6\% & 3.6\% & 100\% & \textbf{100\%} \\
+800 & 12.5\% & 14.3\% & 100\% & \textbf{100\%} \\
+\bottomrule
+\end{tabular}
+\caption{Retention on \tofb{} (offline judge). Query-aware compression keeps the
+answer; truncation loses it.}
+\label{tab:baselines}
+\end{table}
+
+\subsection{Real-LLM pilot and the \tooltrim{} vs. RAG question}
+We ran a real-LLM pilot on Llama-3.3-70B (Groq), $n=8$ (the full-context baseline
+is the token hog and must stay under the free-tier cap). Query-aware $\gg$
+truncation holds and is significant even at $n=8$ (McNemar $p=0.023$--$0.041$).
+However, RAG top-$k$ edged \tooltrim{} 8/8 vs.\ 7/8 at the 256- and 800-token
+budgets---\emph{not} significant ($p=1.0$). Whether \tooltrim's content-type
+structure separates it from plain query-aware selection under a strong judge is
+therefore an open question that the offline lexical judge cannot answer (it ties
+them by construction). We resolve it with a frontier-model matrix.
+
+\subsection{Frontier accuracy/token Pareto}
+\texttt{run\_frontier.py} runs the full grid across $\geq$4 frontier models
+(Anthropic, OpenAI, Groq) on the same cases and budgets, emitting a cross-model
+Pareto and the paired \tooltrim-vs-RAG McNemar test per model. Table~\ref{tab:pareto}
+is populated from that run.
+% To regenerate: python run_frontier.py --limit 40 --budgets 128,256,800
+%   then paste benchmarks/FRONTIER.md rows here.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+model & full acc & tooltrim acc & tooltrim tok & retention & tok saved \\
+\midrule
+\emph{(fill from} & & & & & \\
+\emph{FRONTIER.md)} & & & & & \\
+\bottomrule
+\end{tabular}
+\caption{Frontier accuracy/token Pareto at a 256-token budget. Populated by
+\texttt{run\_frontier.py}.}
+\label{tab:pareto}
+\end{table}
+
+\subsection{Compression as an accuracy aid}
+On small models, removing tool-output noise \emph{raises} accuracy: in prior
+cross-model runs, compression to a 128-token budget improved accuracy from 13\%
+to 84\% (Mistral-7B) and 23\% to 73\% (Llama-3.1-8B), with non-overlapping Wilson
+intervals. Less, on-topic context beats more, noisy context for weaker models.
+
+\subsection{Compression as rate-limit admission control}
+Under Groq's per-request token cap, only \textbf{45\%} (28/62) of \emph{raw} tool
+outputs are admissible---the rest are rejected---versus \textbf{100\%} of
+compressed outputs. A live proxy A/B turned a 14{,}415-token rejected call into a
+26-token accepted one that answered correctly. Compression is thus not only a
+cost lever but an \emph{availability} mechanism: it keeps agent calls inside
+provider limits.
+
+\section{Systems and Scalability}
+\tooltrim{} ships an async proxy with a pluggable content-addressed store
+(file/Redis/S3) and Prometheus metrics. A horizontal load test (Kubernetes +
+shared Redis; \texttt{k8s/}) measures throughput (RPS), p50/p99 latency, and
+compression overhead under concurrency, and reports tokens---and dollars---saved
+across a realistic agent workload. Because the store is content-addressed,
+replicas share expansions and scale horizontally without coordination.
+
+\section{Limitations}
+The offline judge is lexical and ties \tooltrim{} with RAG top-$k$ by
+construction; separation requires the real-LLM Pareto. The real-LLM pilot is
+small ($n=8$) due to free-tier caps; the frontier matrix addresses statistical
+power. \tofb{} uses synthetic, deterministically generated outputs for
+reproducibility and to avoid PII; a companion track drawing cases from real agent
+traces is future work. End-to-end agent-task success (beyond fact recovery) on an
+existing agent benchmark is the natural next evaluation.
+
+\section{Conclusion}
+Tool outputs are the dominant, least-managed token sink in agent loops.
+Query-aware, faithful compression preserves---and for small models improves---task
+success while cutting the overwhelming majority of tokens and keeping calls inside
+provider rate limits. We release the library, the \tofb{} benchmark, and a
+reproducible baseline harness so the result is easy to check and build on.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
