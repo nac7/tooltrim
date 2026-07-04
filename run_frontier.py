@@ -172,12 +172,16 @@ def main() -> None:
 
         tt = next((r for r in results.get("tooltrim", [])
                    if r.budget == args.pareto_budget), None)
+        rag = next((r for r in results.get("rag-topk", [])
+                    if r.budget == args.pareto_budget), None)
         if tt:
             board.append({
                 "model": name, "full_acc": full.accuracy,
                 "full_tokens": full.avg_tokens, "tt_acc": tt.accuracy,
                 "tt_tokens": tt.avg_tokens, "retention": tt.retention,
                 "saved": tt.saved_ratio,
+                "tt_down": tt.downstream,
+                "rag_down": rag.downstream if rag else None,
             })
         for b in budgets:
             sig_lines.append(significance_row(results, name, b))
@@ -194,14 +198,23 @@ def write_summary(path: str, pareto_budget: int, board: List[dict],
              "compression to the budget. Retention = tooltrim accuracy / "
              "full-context accuracy.\n",
              "| model | full acc | full tokens | tooltrim acc | tooltrim tokens "
-             "| retention | tokens saved |",
-             "|---|---:|---:|---:|---:|---:|---:|"]
+             "| retention | tokens saved | tooltrim downstream | rag-topk downstream |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+
+    def _pct(x):
+        return "—" if x is None else f"{x*100:.0f}%"
+
     for r in sorted(board, key=lambda x: -x["tt_acc"]):
         lines.append(
             f"| {r['model']} | {r['full_acc']*100:.0f}% | {r['full_tokens']:,.0f} "
             f"| {r['tt_acc']*100:.0f}% | {r['tt_tokens']:,.0f} "
-            f"| {r['retention']*100:.0f}% | {r['saved']*100:.1f}% |")
-    lines += ["\n## tooltrim vs RAG top-k (paired McNemar)\n",
+            f"| {r['retention']*100:.0f}% | {r['saved']*100:.1f}% "
+            f"| {_pct(r['tt_down'])} | {_pct(r['rag_down'])} |")
+    lines += ["\n*downstream* = fraction of json/tabular cases whose gold fact is "
+              "recoverable from a valid parse in code (the agent's next step). "
+              "tooltrim keeps valid structure; rag-topk shreds single-line JSON "
+              "into unparseable fragments.\n",
+              "## tooltrim vs RAG top-k (paired McNemar)\n",
               "Does content-type structure separate tooltrim from plain "
               "query-aware RAG selection under a real LLM judge?\n",
               "| model | budget | Δ acc (tooltrim − rag-topk) | p-value | "

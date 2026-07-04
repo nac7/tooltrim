@@ -31,8 +31,10 @@ def test_significance_and_summary_render():
 
 def test_write_summary_pareto(tmp_path):
     board = [{"model": "m1", "full_acc": 1.0, "full_tokens": 4000.0,
-              "tt_acc": 1.0, "tt_tokens": 100.0, "retention": 1.0, "saved": 0.97}]
+              "tt_acc": 1.0, "tt_tokens": 100.0, "retention": 1.0, "saved": 0.97,
+              "tt_down": 0.9, "rag_down": 0.4}]
     out = tmp_path / "FRONTIER.md"
     rf.write_summary(str(out), 256, board, ["| m1 | 256 | +0.0pp | 1.000 | no |"])
     text = out.read_text(encoding="utf-8")
     assert "accuracy/token Pareto" in text and "m1" in text and "97.0%" in text
+    assert "downstream" in text and "90%" in text and "40%" in text
