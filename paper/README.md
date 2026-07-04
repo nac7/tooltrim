@@ -27,6 +27,9 @@ python ../run_frontier.py --limit 40 --budgets 128,256,800
 
 ## Status
 
-Draft. The offline-judge, small-model, and rate-limit-admission results are final
-and cite committed artifacts under `../benchmarks/`. The frontier Pareto table is
-wired to `run_frontier.py` and is filled once a budgeted matrix run completes.
+Draft. All results cite committed artifacts under `../benchmarks/`. Table 2 (the
+frontier Pareto) is filled from a full $n{=}62$ run on Claude Haiku 4.5 and Claude
+Sonnet 5 (`../benchmarks/FRONTIER.md`, `../benchmarks/runs/comparison_claude-*.md`):
+compression significantly raises Sonnet 5 accuracy from 69\% to 90\% ($p{=}0.002$),
+and \tooltrim{} ties RAG top-$k$ under the LLM judge ($p\geq0.6$). Extending the
+matrix to OpenAI/Groq rows is a re-run of `run_frontier.py` with those keys set.
