@@ -117,6 +117,17 @@ def _json_blob_multi(notes: List[str], n: int = 320, base: int = 30) -> str:
     return json.dumps({"page": 1, "total": n, "results": items})
 
 
+def _csv_blob_multi(cells: List[str], n: int = 500, base: int = 40) -> str:
+    """Plant several needle cells, spread far apart, in a CSV export."""
+    step = max(1, n // (len(cells) + 1))
+    targets = {(base + (k + 1) * step) % n: cells[k] for k in range(len(cells))}
+    rows = ["id,region,status,amount,note"]
+    for i in range(n):
+        note = targets.get(i, _sentence(4))
+        rows.append(f"{i},{_RNG.choice(['us','eu','apac'])},ok,{i*3}.50,{note}")
+    return "\n".join(rows)
+
+
 # --- declarative case specs ----------------------------------------------------
 # (content_type, needle, question, gold)
 #   text/html: `needle` is the sentence embedded in the page; gold is the fact.
@@ -329,8 +340,46 @@ _DISTRACTOR_SPECS = [
 ]
 
 
+# Aggregation: the answer requires EVERY matching record, not the single best
+# one. Query-aware top-k selection sees only its k highest-scoring chunks and
+# structurally misses the rest; a content-aware compressor can keep all matches.
+# (content_type, [needle1..needleN], question, [gold1..goldN])
+_AGGREGATE_SPECS = [
+    ("json",
+     ["failed payment for order 7001 processor stripe",
+      "failed payment for order 7002 processor stripe",
+      "failed payment for order 7003 processor stripe",
+      "failed payment for order 7004 processor stripe",
+      "failed payment for order 7005 processor stripe"],
+     "List the order numbers of every note about a failed payment.",
+     ["order 7001", "order 7002", "order 7003", "order 7004", "order 7005"]),
+    ("json",
+     ["fraud alert flagged account 3301 for review",
+      "fraud alert flagged account 3302 for review",
+      "fraud alert flagged account 3303 for review",
+      "fraud alert flagged account 3304 for review"],
+     "Which accounts were flagged by a fraud alert? List all of them.",
+     ["account 3301", "account 3302", "account 3303", "account 3304"]),
+    ("tabular",
+     ["compliance hold pending review case 5501",
+      "compliance hold pending review case 5502",
+      "compliance hold pending review case 5503",
+      "compliance hold pending review case 5504",
+      "compliance hold pending review case 5505"],
+     "List every case number that has a compliance hold.",
+     ["case 5501", "case 5502", "case 5503", "case 5504", "case 5505"]),
+    ("tabular",
+     ["expedited shipment to depot 21 priority",
+      "expedited shipment to depot 22 priority",
+      "expedited shipment to depot 23 priority",
+      "expedited shipment to depot 24 priority"],
+     "Which depots received an expedited shipment? List all of them.",
+     ["depot 21", "depot 22", "depot 23", "depot 24"]),
+]
+
+
 def default_cases() -> List[Case]:
-    """Curated faithfulness cases: single-fact + multi-fact + distractor."""
+    """Curated faithfulness cases: single-fact + multi-fact + distractor + aggregate."""
     counters: dict = {}
     cases: List[Case] = []
 
@@ -355,5 +404,12 @@ def default_cases() -> List[Case]:
         cases.append(Case(f"distractor-{i+1:02d}", ctype, blob, question,
                           gold=gold, category="distractor",
                           must_not=(must_not,)))
+
+    for i, (ctype, needles, question, golds) in enumerate(_AGGREGATE_SPECS):
+        builder = _json_blob_multi if ctype == "json" else _csv_blob_multi
+        blob = builder(needles, base=25 + i * 13)
+        cases.append(Case(f"aggregate-{i+1:02d}", ctype, blob, question,
+                          gold=golds[0], category="aggregate",
+                          all_of=tuple(golds[1:])))
 
     return cases

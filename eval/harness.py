@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from tooltrim import ToolCompressor, count_tokens, using_exact_counts
 
@@ -258,6 +258,8 @@ class MethodBudget:
     acc_lo: float = 0.0
     acc_hi: float = 0.0
     mask: tuple = ()          # per-case correctness, for paired significance
+    valid_structure: float = 1.0        # frac of outputs still parseable as their type
+    downstream: Optional[float] = None  # frac of json/tabular cases extractable in code
 
 
 def _method_budget_pass(cases: Sequence[Case], model: QAModel, comp,
@@ -265,12 +267,18 @@ def _method_budget_pass(cases: Sequence[Case], model: QAModel, comp,
                         full_tokens: int) -> MethodBudget:
     from tooltrim import count_tokens as _ct
 
+    from .faithfulness import downstream_rate, parseable_rate
+
     correct = 0
     tokens = 0
     mask: List[bool] = []
+    structure_pairs: List[tuple] = []   # (text, content_type)
+    downstream_items: List[tuple] = []  # (text, case)
     for c in cases:
         text = comp.compress(c.tool_output, c.question, budget)
         tokens += _ct(text)
+        structure_pairs.append((text, c.content_type))
+        downstream_items.append((text, c))
         ok = passed(model.answer(c.question, text), c.gold, c.all_of, c.must_not)
         mask.append(ok)
         correct += int(ok)
@@ -289,6 +297,8 @@ def _method_budget_pass(cases: Sequence[Case], model: QAModel, comp,
         acc_lo=lo,
         acc_hi=hi,
         mask=tuple(mask),
+        valid_structure=parseable_rate(structure_pairs),
+        downstream=downstream_rate(downstream_items),
     )
 
 
@@ -343,16 +353,23 @@ def methods_to_markdown(model_name: str, full: FullResult,
             continue
         lines.append(f"### Budget {b} tokens")
         lines.append("")
-        lines.append("| method | comp tokens | tokens saved | accuracy | 95% CI | retention |")
-        lines.append("|:--|---:|---:|---:|:--:|---:|")
+        lines.append("| method | comp tokens | tokens saved | accuracy | 95% CI "
+                     "| retention | parseable | downstream |")
+        lines.append("|:--|---:|---:|---:|:--:|---:|---:|---:|")
         for r in rows:
             star = " **★**" if r.method == reference else ""
+            down = "—" if r.downstream is None else f"{r.downstream*100:.0f}%"
             lines.append(
                 f"| `{r.method}`{star} | {r.avg_tokens:,.0f} | "
                 f"{r.saved_ratio*100:.1f}% | {r.correct}/{r.n} "
                 f"({r.accuracy*100:.0f}%) | {fmt_ci(r.acc_lo, r.acc_hi)} | "
-                f"{r.retention*100:.1f}% |")
+                f"{r.retention*100:.1f}% | {r.valid_structure*100:.0f}% | {down} |")
         lines.append("")
+    lines.append("*parseable* = fraction of compressed outputs that still parse as "
+                 "their content type (what the agent's next `json.loads`/CSV read "
+                 "does). *downstream* = fraction of json/tabular cases whose gold "
+                 "fact is recoverable from a valid parse in code.")
+    lines.append("")
 
     sig = _significance_section(results, budgets, reference=reference)
     if sig:
@@ -401,13 +418,15 @@ def methods_to_csv(model_name: str, full: FullResult,
     w = csv.writer(buf)
     w.writerow(["model", "method", "budget", "comp_tokens", "saved_ratio",
                 "accuracy", "acc_ci_lo", "acc_ci_hi", "retention",
-                "full_accuracy", "n"])
+                "valid_structure", "downstream", "full_accuracy", "n"])
     for rows in results.values():
         for r in rows:
+            down = "" if r.downstream is None else f"{r.downstream:.4f}"
             w.writerow([model_name, r.method, r.budget, f"{r.avg_tokens:.1f}",
                         f"{r.saved_ratio:.4f}", f"{r.accuracy:.4f}",
                         f"{r.acc_lo:.4f}", f"{r.acc_hi:.4f}",
-                        f"{r.retention:.4f}", f"{full.accuracy:.4f}", r.n])
+                        f"{r.retention:.4f}", f"{r.valid_structure:.4f}", down,
+                        f"{full.accuracy:.4f}", r.n])
     return buf.getvalue()
 
 
@@ -430,13 +449,15 @@ def format_methods_report(model_name: str, full: FullResult,
         lines.append("")
         lines.append(f"budget={b} tokens")
         header = (f"  {'method':<15} {'comp_tok':>9} {'saved':>7} "
-                  f"{'accuracy':>11} {'retention':>10}")
+                  f"{'accuracy':>11} {'retention':>10} {'parse':>6} {'downstr':>8}")
         lines.append(header)
         lines.append("  " + "-" * (len(header) - 2))
         for r in rows:
             mark = " *" if r.method == reference else "  "
+            down = "    —" if r.downstream is None else f"{r.downstream*100:>6.0f}%"
             lines.append(
                 f"  {r.method:<15} {r.avg_tokens:>9,.0f} "
                 f"{r.saved_ratio*100:>6.1f}% {r.correct:>3}/{r.n} "
-                f"{r.accuracy*100:>4.0f}% {r.retention*100:>9.1f}%{mark}")
+                f"{r.accuracy*100:>4.0f}% {r.retention*100:>9.1f}% "
+                f"{r.valid_structure*100:>5.0f}% {down}{mark}")
     return "\n".join(lines)
