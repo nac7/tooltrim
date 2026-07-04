@@ -1,0 +1,9 @@
+model,method,budget,comp_tokens,saved_ratio,accuracy,acc_ci_lo,acc_ci_hi,retention,full_accuracy,n
+llama-3.3-70b-versatile,truncate-head,256,256.0,0.9371,0.0000,0.0000,0.3244,0.0000,1.0000,8
+llama-3.3-70b-versatile,truncate-head,800,800.0,0.8034,0.0000,0.0000,0.3244,0.0000,1.0000,8
+llama-3.3-70b-versatile,truncate-tail,256,256.0,0.9371,0.0000,0.0000,0.3244,0.0000,1.0000,8
+llama-3.3-70b-versatile,truncate-tail,800,800.0,0.8034,0.1250,0.0224,0.4709,0.1250,1.0000,8
+llama-3.3-70b-versatile,rag-topk,256,70.4,0.9827,1.0000,0.6756,1.0000,1.0000,1.0000,8
+llama-3.3-70b-versatile,rag-topk,800,202.1,0.9503,1.0000,0.6756,1.0000,1.0000,1.0000,8
+llama-3.3-70b-versatile,tooltrim,256,111.2,0.9727,0.8750,0.5291,0.9776,0.8750,1.0000,8
+llama-3.3-70b-versatile,tooltrim,800,248.2,0.9390,0.8750,0.5291,0.9776,0.8750,1.0000,8

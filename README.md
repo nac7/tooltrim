@@ -99,6 +99,27 @@ smaller/cheaper models and longer contexts. The harness is wired so a frontier
 run (`--model claude`) drops a new row into the same table when an API key is
 available; n=62 is a pilot, which is why the CIs are reported.
 
+### How does it compare to truncation and RAG?
+
+Preserving accuracy vs *full context* only matters if it beats the obvious
+alternatives. [`run_baselines.py`](run_baselines.py) scores tooltrim against
+**naive truncation**, **query-aware RAG top-k**, **RAG-embed**, and
+**LLMLingua-2** on the same cases and budgets, with a paired **McNemar**
+significance test. Retention (accuracy ÷ full-context accuracy), offline judge:
+
+| budget | truncate-head | truncate-tail | rag-topk | **tooltrim** |
+|---:|---:|---:|---:|---:|
+| 128 | 1.8% | 1.8% | 100% | **100%** |
+| 256 | 3.6% | 3.6% | 100% | **100%** |
+| 800 | 12.5% | 14.3% | 100% | **100%** |
+
+Query-aware compression retains **100%** of accuracy while cutting 94–99% of
+tokens; blind truncation drops the needed fact and collapses (p < 0.001 at every
+budget). The offline judge is itself lexical, so RAG top-k ties tooltrim here —
+tooltrim's content-type structure advantage surfaces with a real-LLM judge on
+structured output. Details, caveats, and the full grid:
+[`benchmarks/BASELINES.md`](benchmarks/BASELINES.md).
+
 ## Install
 
 ```bash
