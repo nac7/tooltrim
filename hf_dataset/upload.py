@@ -29,11 +29,21 @@ def main() -> int:
     ap.add_argument("--private", action="store_true",
                     help="create the repo as private")
     ap.add_argument("--token", default=os.environ.get("HF_TOKEN"),
-                    help="HF write token (defaults to $HF_TOKEN)")
+                    help="HF write token (defaults to $HF_TOKEN, then to the "
+                         "token saved by `huggingface-cli login`)")
     args = ap.parse_args()
 
+    # Fall back to a persisted login (~/.cache/huggingface/token) so the token
+    # need not be re-supplied every run. token=None lets HfApi use the cache.
     if not args.token:
-        print("error: no token. Set HF_TOKEN or pass --token.", file=sys.stderr)
+        try:
+            from huggingface_hub import get_token
+            args.token = get_token()
+        except Exception:
+            args.token = None
+    if not args.token:
+        print("error: no token. Set HF_TOKEN, pass --token, or run "
+              "`huggingface-cli login`.", file=sys.stderr)
         return 2
 
     data = HERE / "data" / "tofb.jsonl"
