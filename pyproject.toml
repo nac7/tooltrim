@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tooltrim"
-version = "0.2.0"
+version = "0.2.1"
 description = "Drop-in compression for LLM agent tool outputs. Shrink bloated HTML/JSON/log results before they re-enter context — cut tokens, stay on-task, keep full output retrievable."
 readme = "README.md"
 requires-python = ">=3.9"
