@@ -1,0 +1,35 @@
+# Mock LLM upstream so the load test isolates the proxy (no spend, no provider
+# rate limits). Set UPSTREAM_DELAY_MS to model a real backend's latency.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tooltrim-mock-upstream
+  namespace: tooltrim
+  labels: { app: tooltrim-mock-upstream }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: tooltrim-mock-upstream } }
+  template:
+    metadata:
+      labels: { app: tooltrim-mock-upstream }
+    spec:
+      containers:
+        - name: mock
+          image: tooltrim-proxy:0.2.1   # same image; different entrypoint
+          command: ["python", "mock_upstream.py"]
+          env:
+            - { name: PORT, value: "9000" }
+            - { name: UPSTREAM_DELAY_MS, value: "50" }
+          ports: [{ containerPort: 9000 }]
+          resources:
+            requests: { cpu: "100m", memory: "64Mi" }
+            limits: { cpu: "500m", memory: "128Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tooltrim-mock-upstream
+  namespace: tooltrim
+spec:
+  selector: { app: tooltrim-mock-upstream }
+  ports: [{ port: 9000, targetPort: 9000 }]

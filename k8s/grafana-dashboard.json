@@ -1,0 +1,70 @@
+{
+  "title": "tooltrim — tokens & dollars saved",
+  "uid": "tooltrim-savings",
+  "schemaVersion": 39,
+  "editable": true,
+  "tags": ["tooltrim", "llm", "cost"],
+  "templating": {
+    "list": [
+      {
+        "name": "price_per_mtok",
+        "label": "Input $ / 1M tokens",
+        "type": "constant",
+        "query": "3.0",
+        "current": { "value": "3.0", "text": "3.0" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Tokens saved / sec",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(rate(tooltrim_tokens_saved_total[5m]))" }]
+    },
+    {
+      "type": "stat",
+      "title": "$ saved / hour",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "targets": [{ "expr": "sum(rate(tooltrim_tokens_saved_total[5m])) * 3600 / 1e6 * $price_per_mtok" }],
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } }
+    },
+    {
+      "type": "stat",
+      "title": "Compression ratio (out/in)",
+      "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+      "targets": [{ "expr": "sum(rate(tooltrim_tokens_out_total[5m])) / sum(rate(tooltrim_tokens_in_total[5m]))" }],
+      "fieldConfig": { "defaults": { "unit": "percentunit" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Throughput (req/s) by pod",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [{ "expr": "sum by (pod) (rate(tooltrim_requests_total[1m]))" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Mean request latency (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [{ "expr": "sum(rate(tooltrim_request_latency_seconds_sum[5m])) / sum(rate(tooltrim_request_latency_seconds_count[5m]))" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tokens in vs out (rate)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        { "expr": "sum(rate(tooltrim_tokens_in_total[5m]))", "legendFormat": "in" },
+        { "expr": "sum(rate(tooltrim_tokens_out_total[5m]))", "legendFormat": "out" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Fail-open & upstream errors (rate)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "targets": [
+        { "expr": "sum(rate(tooltrim_fail_open_total[5m]))", "legendFormat": "fail-open" },
+        { "expr": "sum(rate(tooltrim_upstream_errors_total[5m]))", "legendFormat": "upstream-errors" }
+      ]
+    }
+  ]
+}

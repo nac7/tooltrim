@@ -1,0 +1,69 @@
+# The compression proxy. Each pod is ~1 CPU (compression is GIL-bound to one
+# core), so horizontal replicas — not threads — provide throughput. All pods
+# share one Redis expand store, so scaling out needs no coordination.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tooltrim-proxy
+  namespace: tooltrim
+  labels: { app: tooltrim-proxy }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: tooltrim-proxy } }
+  template:
+    metadata:
+      labels: { app: tooltrim-proxy }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8800"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: proxy
+          image: tooltrim-proxy:0.2.1   # built from k8s/Dockerfile
+          ports: [{ containerPort: 8800 }]
+          env:
+            - { name: TOOLTRIM_UPSTREAM, value: "http://tooltrim-mock-upstream:9000" }
+            - { name: TOOLTRIM_REDIS_URL, value: "redis://tooltrim-redis:6379/0" }
+            - { name: TOOLTRIM_MAX_TOKENS, value: "512" }
+          resources:
+            requests: { cpu: "1", memory: "256Mi" }
+            limits: { cpu: "1", memory: "512Mi" }
+          readinessProbe:
+            httpGet: { path: /metrics, port: 8800 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /metrics, port: 8800 }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tooltrim-proxy
+  namespace: tooltrim
+  labels: { app: tooltrim-proxy }
+spec:
+  selector: { app: tooltrim-proxy }
+  ports: [{ name: http, port: 8800, targetPort: 8800 }]
+---
+# Scale pods on CPU — throughput is CPU-bound, so CPU utilization is the right
+# signal. Demonstrates near-linear scaling of tokens-saved throughput.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tooltrim-proxy
+  namespace: tooltrim
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tooltrim-proxy
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
