@@ -20,6 +20,36 @@ def test_json_query_prioritizes_relevant_items():
     assert "needle" in out
 
 
+def test_json_budget_is_a_cap_not_a_target():
+    # One genuinely-relevant record among keyword-stuffed distractors that repeat
+    # the query term. A larger budget must NOT pad the output with those near-zero
+    # noise records: selection follows the relevance cliff, so the compressed size
+    # stays flat as the budget grows (the fix that stopped accuracy decaying with
+    # budget). Regression for the budget-as-target padding bug.
+    data = [{"id": i, "note": "account account order ledger account"} for i in range(300)]
+    data[7]["note"] = "approved limit for the premium account is 25000 dollars"
+    blob = json.dumps({"total": 300, "results": data})
+    outs = {b: json_.compress(blob, query="approved limit premium account", max_tokens=b)
+            for b in (128, 256, 800)}
+    for b, out in outs.items():
+        assert "25000 dollars" in out, f"lost the needle at budget {b}"
+    # bigger budget did not reintroduce noise: output size is stable, not inflated
+    assert count_tokens(outs[800]) <= count_tokens(outs[128]) + 5
+
+
+def test_json_aggregation_keeps_the_whole_relevant_cluster():
+    # When several records are all genuinely relevant (they share the query terms),
+    # the relevance cliff keeps the whole cluster, not just the single best — so
+    # aggregation queries stay answerable.
+    data = [{"id": i, "note": f"unrelated filler row {i} about latency"} for i in range(200)]
+    for oid in (7001, 7002, 7003, 7004):
+        data.append({"id": oid, "note": f"failed payment for order {oid} processor stripe"})
+    blob = json.dumps({"results": data})
+    out = json_.compress(blob, query="failed payment order", max_tokens=256)
+    for oid in (7001, 7002, 7003, 7004):
+        assert str(oid) in out, f"dropped a relevant record {oid}"
+
+
 def test_html_extracts_text_drops_script_style():
     page = (
         "<html><head><style>.a{color:red}</style>"

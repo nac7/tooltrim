@@ -379,7 +379,15 @@ _AGGREGATE_SPECS = [
 
 
 def default_cases() -> List[Case]:
-    """Curated faithfulness cases: single-fact + multi-fact + distractor + aggregate."""
+    """Curated faithfulness cases: single-fact + multi-fact + distractor + aggregate.
+
+    Reseeds the shared filler RNG on entry so the returned suite is *identical on
+    every call* (and across processes). Without this the module-level ``_RNG`` would
+    carry state between calls, making a second invocation — or any run that touched
+    the RNG first — emit different blobs, which silently invalidated the answer cache
+    and made the benchmark non-reproducible.
+    """
+    _RNG.seed(7)
     counters: dict = {}
     cases: List[Case] = []
 

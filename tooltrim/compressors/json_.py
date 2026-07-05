@@ -18,6 +18,14 @@ from ..relevance import score_chunks
 from ..tokens import count_tokens
 from ._budget import fit_chunks
 
+# A kept record must score at least this fraction of the best-matching record's
+# score. This turns array selection into a *relevance cliff* rather than a fill-to-k
+# quota: single-needle queries keep just the needle (everything else falls off the
+# cliff), while genuine multi-record matches (aggregation) keep the whole cluster
+# because those records score similarly high. A fixed prior — deliberately not tuned
+# per benchmark — that stops a larger budget from padding in keyword-stuffed noise.
+_RELEVANCE_FLOOR = 0.5
+
 
 def _truncate_str(s: str, max_str_len: int) -> str:
     if len(s) <= max_str_len:
@@ -26,14 +34,22 @@ def _truncate_str(s: str, max_str_len: int) -> str:
 
 
 def _sample_indices(items: List[Any], k: int, query: str | None) -> List[int]:
-    if len(items) <= k:
-        return list(range(len(items)))
+    # Query-aware selection treats the budget as a *cap*, not a target: keep only
+    # the relevance-positive records (top-k of them), never padding out to k with
+    # zero-score noise. Padding is what let a larger budget reintroduce distractors
+    # and cost accuracy — a bigger array kept *more* wrong records, not more signal.
+    # (Plain top-k-by-position, below, is the no-query fallback.)
     if query:
         rendered = [json.dumps(it, ensure_ascii=False, default=str) for it in items]
         scores = score_chunks(rendered, query)
-        if any(s > 0 for s in scores):
-            top = sorted(range(len(items)), key=lambda i: scores[i], reverse=True)[:k]
-            return sorted(top)
+        positive = [i for i in range(len(items)) if scores[i] > 0]
+        if positive:
+            positive.sort(key=lambda i: scores[i], reverse=True)
+            floor = scores[positive[0]] * _RELEVANCE_FLOOR
+            kept = [i for i in positive if scores[i] >= floor]
+            return sorted(kept[:k])
+    if len(items) <= k:
+        return list(range(len(items)))
     return list(range(k))
 
 

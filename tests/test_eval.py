@@ -15,6 +15,16 @@ def test_dataset_shape():
         assert c.tool_output and c.question and c.gold
 
 
+def test_default_cases_is_idempotent():
+    # The suite must be identical on every call (and across processes): the filler
+    # RNG is reseeded on entry. Without this, a second call — or any run that drew
+    # from the shared RNG first — produced different blobs, silently invalidating
+    # the answer cache and making the benchmark non-reproducible.
+    a = default_cases()
+    b = default_cases()
+    assert [c.tool_output for c in a] == [c.tool_output for c in b]
+
+
 def test_passed_scoring():
     from eval.judge import passed
 
