@@ -5,6 +5,7 @@ Cross-model comparison at a **256-token** budget. `full` is uncompressed tool ou
 | model | full acc | full tokens | tooltrim acc | tooltrim tokens | retention | tokens saved | tooltrim downstream | rag-topk downstream |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | claude-haiku-4-5 | 97% | 6,813 | 100% | 139 | 103% | 98.0% | 57% | 39% |
+| claude-opus-4-8 | 73% | 6,813 | 100% | 139 | 138% | 98.0% | 57% | 39% |
 | gpt-4o-mini | 98% | 6,813 | 97% | 139 | 98% | 98.0% | 57% | 39% |
 | claude-sonnet-5 | 73% | 6,813 | 92% | 139 | 127% | 98.0% | 57% | 39% |
 
@@ -25,3 +26,6 @@ Does content-type structure separate tooltrim from plain query-aware RAG selecti
 | gpt-4o-mini | 128 | +1.5pp | 1.000 | no |
 | gpt-4o-mini | 256 | +1.5pp | 1.000 | no |
 | gpt-4o-mini | 800 | +0.0pp | 1.000 | no |
+| claude-opus-4-8 | 128 | +1.5pp | 1.000 | no |
+| claude-opus-4-8 | 256 | +4.5pp | 0.248 | no |
+| claude-opus-4-8 | 800 | -1.5pp | 1.000 | no |

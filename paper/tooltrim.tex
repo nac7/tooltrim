@@ -39,13 +39,14 @@ five content types, with single-fact, multi-fact, distractor, and aggregation
 variants. On \tofb, query-aware compression retains \textbf{100\%} of
 full-context accuracy while removing 94--99\% of tokens, whereas truncation
 collapses to 2--14\% ($p<0.001$ at every budget by a paired McNemar test). We
-report three findings: (i) compression can \emph{improve} accuracy---on Claude
-Sonnet~5, compressing to 256 tokens raises accuracy from 73\% to 92\%
-($p{=}0.001$)---by removing distracting tool-output noise; (ii) compression acts
+report three findings: (i) compression can \emph{improve} accuracy even on
+frontier models---full context depresses Claude Sonnet~5 and Opus~4.8 to 73\%, and
+compressing to 256 tokens raises them to 92\% and 100\% ($p{\leq}0.001$)---by
+removing distracting tool-output noise; (ii) compression acts
 as \emph{rate-limit admission control}---under a hosted provider's per-request
 token cap, only 42\% of raw tool outputs are admissible versus 100\% of
 compressed ones; and (iii) against strong query-aware RAG top-$k$, \tooltrim{}
-ties on answer accuracy ($p\geq 0.48$ on three frontier models) but its output
+ties on answer accuracy ($p\geq 0.25$ on four frontier models) but its output
 stays \emph{machine-parseable}---the gold fact is recoverable from a real parse
 57\% of the time versus 39\% for RAG, which shreds structured output into
 fragments an agent cannot re-parse. We release \tooltrim{} (PyPI, MIT), the \tofb{} dataset (HuggingFace), and
@@ -206,9 +207,9 @@ frontier-model matrix and a structural metric.
 \texttt{run\_frontier.py} runs the full grid across frontier models on the same
 cases and budgets, emitting a cross-model Pareto and the paired \tooltrim-vs-RAG
 McNemar test per model. Table~\ref{tab:pareto} reports a full $n{=}66$ run across
-three frontier models from two providers (Claude Haiku 4.5, Claude Sonnet 5, and
-OpenAI GPT-4o-mini); the matrix extends to further providers (Groq, local Ollama)
-with the corresponding API keys.
+four frontier models from two providers (Claude Haiku 4.5, Claude Sonnet 5, Claude
+Opus 4.8, and OpenAI GPT-4o-mini); the matrix extends to further providers (Groq,
+local Ollama) with the corresponding API keys.
 % To regenerate: python run_frontier.py --budgets 128,256,800 (see benchmarks/FRONTIER.md)
 
 \paragraph{Compression beats full context and truncation.} On Claude Sonnet 5,
@@ -218,12 +219,12 @@ full, and significant at every budget)---the full-context noise actively degrade
 a capable model, and removing it recovers the answer. On Claude Haiku 4.5, full
 context is already strong (97\%) and compression holds or improves it (100\% at
 256 tokens, retention 103\%). Against truncation, \tooltrim{} wins by 60--89
-points at every budget on all three models ($p<0.001$).
+points at every budget on all four models ($p<0.001$).
 
 \paragraph{Against RAG: parity on recall, separation on structure.} On
 answer accuracy \tooltrim{} and query-aware RAG top-$k$ are statistically
 indistinguishable: they stay within $\pm 3$ points and the difference is
-\emph{not} significant on any of the three models at any budget ($p\geq 0.48$). This
+\emph{not} significant on any of the four models at any budget ($p\geq 0.25$). This
 confirms the pilot---single planted facts reward any query-aware selector
 equally, so raw recall cannot separate the two. The separation is instead
 \emph{structural}. Because \tooltrim{} respects each content type, its compressed
@@ -231,7 +232,7 @@ output is still \emph{valid for the agent's next step}: on the JSON/tabular case
 its result parses in code and the gold fact is recoverable from that parse
 (\emph{downstream-extractability}) 57\% of the time at a 256-token budget, versus
 39\% for RAG top-$k$, which shreds single-line JSON into mid-object fragments an
-agent cannot \texttt{json.loads}. This holds identically on all three models---the
+agent cannot \texttt{json.loads}. This holds identically on all four models---the
 metric is deterministic, computed from the compressed text, not the judge---and
 at every budget (Table~\ref{tab:pareto}). RAG's fragments \emph{happen} to answer
 a natural-language question because a strong LLM reads around the broken syntax;
@@ -257,18 +258,20 @@ top-$k$ at every budget rather than trailing it at the largest.
 \toprule
 model & full acc & tt acc & tt tok & retention & tt down & RAG down \\
 \midrule
+Claude Opus 4.8  & 73\% & \textbf{100\%} & 139 & 138\% & \textbf{57\%} & 39\% \\
 Claude Haiku 4.5 & 97\% & \textbf{100\%} & 139 & 103\% & \textbf{57\%} & 39\% \\
 GPT-4o-mini      & 98\% & \textbf{97\%}  & 139 & 98\%  & \textbf{57\%} & 39\% \\
 Claude Sonnet 5  & 73\% & \textbf{92\%}  & 139 & 127\% & \textbf{57\%} & 39\% \\
 \bottomrule
 \end{tabular}
 \caption{Frontier accuracy/token Pareto at a 256-token budget ($n{=}66$,
-real-LLM judge), three models across two providers. Compression \emph{raises}
-Sonnet~5 accuracy from 73\% to 92\% and holds the near-ceiling models within a
-point, while cutting 98\% of tokens. \tooltrim{} and RAG top-$k$ tie on answer
-accuracy on every model ($p\geq 0.48$, not shown), but \tooltrim's output stays
+real-LLM judge), four models across two providers. Compression \emph{raises}
+accuracy on the two noise-sensitive frontier models (Sonnet~5 73\%$\rightarrow$92\%,
+Opus~4.8 73\%$\rightarrow$100\%) and holds the near-ceiling models within a point,
+while cutting 98\% of tokens. \tooltrim{} and RAG top-$k$ tie on answer accuracy on
+every model ($p\geq 0.25$, not shown), but \tooltrim's output stays
 machine-parseable: downstream-extractability (\emph{tt down}) is 57\% vs.\ 39\%
-for RAG on all three. Generated by \texttt{run\_frontier.py}.}
+for RAG on all four. Generated by \texttt{run\_frontier.py}.}
 \label{tab:pareto}
 \end{table}
 
@@ -277,9 +280,12 @@ Removing tool-output noise \emph{raises} accuracy, and not only for small
 models. In cross-model runs, compression to a 128-token budget improved accuracy
 from 13\% to 84\% (Mistral-7B) and 23\% to 73\% (Llama-3.1-8B), with
 non-overlapping Wilson intervals. The frontier run above shows the same effect on
-a capable model with statistical significance: Claude Sonnet 5 rises from 73\% to
-92\% ($p{=}0.001$). Less, on-topic context beats more, noisy context --- the
-excess is not merely wasted budget, it degrades the answer.
+the strongest models with statistical significance: full context depresses both
+Claude Sonnet~5 and Claude Opus~4.8 to 73\%, and compressing to 256 tokens raises
+them to 92\% and \textbf{100\%} respectively ($p{\leq}0.001$ vs.\ full)---the
+flagship model recovers \emph{every} case once the noise is stripped. Less,
+on-topic context beats more, noisy context --- the excess is not merely wasted
+budget, it degrades the answer.
 
 \subsection{Compression as rate-limit admission control}
 Under Groq's per-request token cap, only \textbf{42\%} (28/66) of \emph{raw} tool
@@ -300,7 +306,7 @@ replicas share expansions and scale horizontally without coordination.
 \section{Limitations}
 On \emph{answer accuracy}, \tooltrim{} and RAG top-$k$ tie: the offline lexical
 judge ties them by construction, and the frontier matrix ($n{=}66$) removes that
-construction yet the tie persists ($p\geq 0.48$ on all three models). We read this as a
+construction yet the tie persists ($p\geq 0.25$ on all four models). We read this as a
 property of the metric---single planted facts in homogeneous filler reward any
 query-aware selector equally, and a strong LLM reads around broken syntax to
 answer a natural-language question. The separation we do measure is
