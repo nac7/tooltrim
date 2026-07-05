@@ -467,10 +467,12 @@ advantage persists \emph{across a multi-step tool chain}
 (Section~\ref{sec:multistep}): compressing every tool output in a 2-hop loop,
 \tooltrim{} completes 100\% of episodes to truncation's and RAG's 0\%. Two honest
 gaps remain. First, our tasks and tool outputs are synthetic and deterministically
-generated (for reproducibility and to avoid PII); the multi-step harness exposes
-adapter seams for \emph{tau-bench} and BFCL, and running tooltrim as a
-preprocessing layer on those external benchmarks with an LLM tool-calling policy
-is the definitive next evaluation. Second, a companion track drawing cases from
+generated (for reproducibility and to avoid PII). We implement the
+\emph{tau-bench} adapter as an env wrapper that compresses tool observations
+inside tau-bench's own loop---leaving its reward function and LLM user simulator
+untouched, so results stay comparable to the published leaderboard---and running
+it across the task suite with an LLM agent and user simulator is the definitive
+external evaluation, requiring only API budget. Second, a companion track drawing cases from
 real agent traces would close the synthetic-data gap entirely; both are the
 immediate future work.
 

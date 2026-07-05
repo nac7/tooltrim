@@ -171,22 +171,26 @@ class _Unavailable:
 
 
 def load_taubench():
-    """tau-bench adapter seam.
+    """tau-bench availability check.
 
-    Returns the adapter if the ``tau_bench`` package is importable, else an
-    ``_Unavailable`` explaining how to install it. Mapping tau-bench's
-    retail/airline tasks into ``BenchTask`` + an LLM tool-calling ``Policy`` is
-    the remaining wiring for a real run.
+    The real integration lives in ``eval.taubench_adapter`` and does *not* port
+    tau-bench tasks into ``BenchTask`` — it wraps tau-bench's own ``Env`` so tool
+    observations are compressed in-loop (``make_compressed_env``), keeping
+    tau-bench's reward and user simulator intact. This function just reports
+    whether the upstream package is importable.
     """
     import importlib.util
 
     if importlib.util.find_spec("tau_bench") is None:
         return _Unavailable(
             "tau-bench",
-            "pip install tau-bench (github.com/sierra-research/tau-bench) + set an LLM key")
-    # TODO: map tau_bench envs -> BenchTask (tools = env.tools, check = env reward),
-    # supply an LLM tool-calling Policy. Left as the integration seam.
-    return _Unavailable("tau-bench", "installed but adapter mapping not yet wired")
+            "pip install tau-bench (github.com/sierra-research/tau-bench) + set an LLM key; "
+            "then use eval.taubench_adapter.make_compressed_env")
+    from . import taubench_adapter  # noqa: F401  (import side-checks availability)
+
+    return _Unavailable(
+        "tau-bench",
+        "installed — run via eval.taubench_adapter.make_compressed_env + run_taubench.py")
 
 
 def load_bfcl():
