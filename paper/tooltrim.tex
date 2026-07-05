@@ -33,17 +33,22 @@ truncation, silently discards the fact the agent needs. We present \tooltrim, a
 drop-in, provider-agnostic library that compresses tool outputs \emph{before}
 they re-enter context using a content-type router and query-aware extraction,
 while keeping the full output retrievable on demand via a content-addressed
-store. We introduce the \emph{Tool-Output Faithfulness Benchmark} (\tofb), 62
+store. We introduce the \emph{Tool-Output Faithfulness Benchmark} (\tofb), 66
 cases that plant a checkable fact inside realistic, bloated tool output across
-five content types, with single-fact, multi-fact, and distractor variants. On
-\tofb, query-aware compression retains \textbf{100\%} of full-context accuracy
-while removing 94--99\% of tokens, whereas truncation collapses to 2--14\%
-($p<0.001$ at every budget by a paired McNemar test). We report two
-counterintuitive findings: (i) compression can \emph{improve} small-model
-accuracy by removing distracting tool-output noise, and (ii) compression acts as
-\emph{rate-limit admission control}---under a hosted provider's per-request token
-cap, only 45\% of raw tool outputs are admissible versus 100\% of compressed
-ones. We release \tooltrim{} (PyPI, MIT), the \tofb{} dataset (HuggingFace), and
+five content types, with single-fact, multi-fact, distractor, and aggregation
+variants. On \tofb, query-aware compression retains \textbf{100\%} of
+full-context accuracy while removing 94--99\% of tokens, whereas truncation
+collapses to 2--14\% ($p<0.001$ at every budget by a paired McNemar test). We
+report three findings: (i) compression can \emph{improve} accuracy---on Claude
+Sonnet~5, compressing to 256 tokens raises accuracy from 73\% to 92\%
+($p{=}0.001$)---by removing distracting tool-output noise; (ii) compression acts
+as \emph{rate-limit admission control}---under a hosted provider's per-request
+token cap, only 42\% of raw tool outputs are admissible versus 100\% of
+compressed ones; and (iii) against strong query-aware RAG top-$k$, \tooltrim{}
+ties on answer accuracy ($p\geq 0.48$ on two frontier models) but its output
+stays \emph{machine-parseable}---the gold fact is recoverable from a real parse
+57\% of the time versus 39\% for RAG, which shreds structured output into
+fragments an agent cannot re-parse. We release \tooltrim{} (PyPI, MIT), the \tofb{} dataset (HuggingFace), and
 a reproducible baseline harness comparing \tooltrim{} against truncation, RAG
 top-$k$, and LLMLingua-2.
 \end{abstract}
@@ -75,13 +80,18 @@ query-aware BM25 (or optional embedding) extraction, with expand-on-demand over
 a content-addressed store, exposed as a decorator, an OpenAI/Anthropic-compatible
 proxy, framework adapters (LangChain, LlamaIndex, OpenAI-Agents), and an MCP
 gateway.
-\item \tofb, a reproducible 62-case faithfulness benchmark with a single
-checkable gold fact per case across five content types and three difficulty
-modes, released on HuggingFace.
+\item \tofb, a reproducible 66-case faithfulness benchmark with a single
+checkable gold fact per case across five content types and four difficulty
+modes (single-fact, multi-fact, distractor, aggregation), released on HuggingFace.
 \item An honest, paired-significance evaluation against truncation, RAG top-$k$,
-and LLMLingua-2, plus a frontier-model accuracy/token Pareto.
-\item Two findings with practical weight: compression as an accuracy aid for
-small models, and compression as provider rate-limit admission control.
+and LLMLingua-2, plus a frontier-model accuracy/token Pareto---and a
+\emph{downstream-extractability} metric that measures whether a compressed output
+still parses in code, the axis on which content-type structure separates
+\tooltrim{} from plain query-aware selection.
+\item Three findings with practical weight: compression as an accuracy aid (even
+for a frontier model), compression as provider rate-limit admission control, and
+parity-on-recall but structural separation (machine-parseable output) against RAG
+top-$k$.
 \end{enumerate}
 
 \section{Related Work}
@@ -126,15 +136,18 @@ The proxy exposes Prometheus metrics (tokens in/out, savings, fail-open events).
 
 \section{The Tool-Output Faithfulness Benchmark (\tofb)}
 \tofb{} isolates the property that matters: does the needed fact \emph{survive}
-compression? Each of 62 cases plants one distinctive fact (a ``needle'') inside a
+compression? Each of 66 cases plants one distinctive fact (a ``needle'') inside a
 large, type-appropriate tool output and pairs it with a question whose wording
-overlaps the needle. Filler is generated deterministically (seeded), so cases are
-fully reproducible from source and contain no scraped or personal data. Cases
-span five content types (text, HTML, JSON, logs, tabular) and three modes:
-\textbf{single} (50; one fact), \textbf{multi} (6; two facts placed far apart,
-both required), and \textbf{distractor} (6; a similar-but-wrong value sits far
-from the right one; the answer must appear and the trap must not). Mean output
-size is $\approx$6.6k tokens/case ($\approx$411k tokens total). Scoring is
+overlaps the needle. Filler is generated deterministically (seeded, and reseeded
+on every dataset build), so cases are fully reproducible from source---bit-for-bit
+across processes---and contain no scraped or personal data. Cases span five content
+types (text, HTML, JSON, logs, tabular) and four modes: \textbf{single} (50; one
+fact), \textbf{multi} (6; two facts placed far apart, both required),
+\textbf{distractor} (6; a similar-but-wrong value sits far from the right one; the
+answer must appear and the trap must not), and \textbf{aggregation} (4; several
+records match the query and all must be recovered---a structural ceiling for
+top-$k$ selectors). Mean output size is $\approx$6.8k tokens/case ($\approx$450k
+tokens total). Scoring is
 unambiguous: a case passes iff the model's answer contains the gold string
 (normalized), all \texttt{all\_of} facts appear, and no \texttt{must\_not}
 distractor appears. \tofb{} is released on HuggingFace under MIT.
@@ -153,9 +166,11 @@ pairs are compared with a paired \textbf{McNemar} test on discordant cases.
 \section{Results}
 \subsection{Faithfulness vs. truncation (offline judge)}
 Table~\ref{tab:baselines} reports retention (accuracy $\div$ full-context
-accuracy). Query-aware methods retain \textbf{100\%} of accuracy while cutting
-94--99\% of tokens; blind truncation drops the fact and collapses. The difference
-is significant at every budget ($p<0.001$).
+accuracy). Query-aware methods retain \textbf{$\geq$100\%} of accuracy while
+cutting 94--99\% of tokens---\tooltrim{} exceeds 100\% because removing filler
+recovers facts the raw context buried even from the BM25 judge---whereas blind
+truncation drops the fact and collapses (significant at every budget,
+$p<0.001$).
 
 \begin{table}[t]
 \centering
@@ -163,13 +178,16 @@ is significant at every budget ($p<0.001$).
 \toprule
 budget & truncate-head & truncate-tail & rag-top$k$ & \textbf{\tooltrim} \\
 \midrule
-128 & 1.8\% & 1.8\% & 100\% & \textbf{100\%} \\
-256 & 3.6\% & 3.6\% & 100\% & \textbf{100\%} \\
-800 & 12.5\% & 14.3\% & 100\% & \textbf{100\%} \\
+128 & 1.8\% & 1.8\% & 100\% & \textbf{102\%} \\
+256 & 3.5\% & 3.5\% & 100\% & \textbf{105\%} \\
+800 & 12.3\% & 15.8\% & 100\% & \textbf{105\%} \\
 \bottomrule
 \end{tabular}
-\caption{Retention on \tofb{} (offline judge). Query-aware compression keeps the
-answer; truncation loses it.}
+\caption{Retention on \tofb{} (offline BM25 judge, $n{=}66$). Query-aware
+compression keeps the answer; truncation loses it. \tooltrim{} edges RAG top-$k$
+here (the aggregation cases, where RAG shreds multi-record matches), though the
+gap is not significant at this $n$ ($p\geq 0.25$); the robust separation is the
+deterministic downstream-extractability metric reported below.}
 \label{tab:baselines}
 \end{table}
 
@@ -180,44 +198,74 @@ truncation holds and is significant even at $n=8$ (McNemar $p=0.023$--$0.041$).
 However, RAG top-$k$ edged \tooltrim{} 8/8 vs.\ 7/8 at the 256- and 800-token
 budgets---\emph{not} significant ($p=1.0$). Whether \tooltrim's content-type
 structure separates it from plain query-aware selection under a strong judge is
-therefore an open question that the offline lexical judge cannot answer (it ties
-them by construction). We resolve it with a frontier-model matrix.
+therefore an open question: on single-needle recall the offline lexical judge ties
+them almost by construction (both keep the one needle). We resolve it with a
+frontier-model matrix and a structural metric.
 
 \subsection{Frontier accuracy/token Pareto}
 \texttt{run\_frontier.py} runs the full grid across frontier models on the same
 cases and budgets, emitting a cross-model Pareto and the paired \tooltrim-vs-RAG
-McNemar test per model. Table~\ref{tab:pareto} reports a full $n{=}62$ run on two
+McNemar test per model. Table~\ref{tab:pareto} reports a full $n{=}66$ run on two
 Anthropic frontier models (Claude Haiku 4.5 and Claude Sonnet 5); the matrix
 extends to additional providers (OpenAI, Groq) with the corresponding API keys.
 % To regenerate: python run_frontier.py --budgets 128,256,800 (see benchmarks/FRONTIER.md)
 
-The result is decisive and, for the stronger model, \emph{statistically
-significant}: on Claude Sonnet 5, uncompressed tool output yields only 69\%
-accuracy, but compressing it to 256 tokens \emph{raises} accuracy to 90\%
-(retention 130\%; McNemar $p{=}0.002$ vs.\ full, and $p{<}0.002$ at every budget)
---- the full-context noise actively degrades a capable model, and removing it
-recovers the answer. On Claude Haiku 4.5, full context is already strong (97\%)
-and compression holds at 100\% (retention 103\%). Against truncation, \tooltrim{}
-wins by 60--94 points at every budget on both models ($p<0.001$). Against
-query-aware RAG top-$k$, the two remain within $\pm 3$ points and the difference
-is \emph{not} significant on either model ($p\geq 0.6$) --- confirming the pilot:
-under a real LLM judge, \tooltrim's content-type structure does not separate it
-from strong query-aware selection on \tofb, even though both dominate truncation
-and full context.
+\paragraph{Compression beats full context and truncation.} On Claude Sonnet 5,
+uncompressed tool output yields only 73\% accuracy, but compressing it to 256
+tokens \emph{raises} accuracy to 92\% (retention 127\%; McNemar $p{=}0.001$ vs.\
+full, and significant at every budget)---the full-context noise actively degrades
+a capable model, and removing it recovers the answer. On Claude Haiku 4.5, full
+context is already strong (97\%) and compression holds or improves it (100\% at
+256 tokens, retention 103\%). Against truncation, \tooltrim{} wins by 60--89
+points at every budget on both models ($p<0.001$).
+
+\paragraph{Against RAG: parity on recall, separation on structure.} On
+answer accuracy \tooltrim{} and query-aware RAG top-$k$ are statistically
+indistinguishable: they stay within $\pm 3$ points and the difference is
+\emph{not} significant on either model at any budget ($p\geq 0.48$). This
+confirms the pilot---single planted facts reward any query-aware selector
+equally, so raw recall cannot separate the two. The separation is instead
+\emph{structural}. Because \tooltrim{} respects each content type, its compressed
+output is still \emph{valid for the agent's next step}: on the JSON/tabular cases
+its result parses in code and the gold fact is recoverable from that parse
+(\emph{downstream-extractability}) 57\% of the time at a 256-token budget, versus
+39\% for RAG top-$k$, which shreds single-line JSON into mid-object fragments an
+agent cannot \texttt{json.loads}. This holds identically on both models---the
+metric is deterministic, computed from the compressed text, not the judge---and
+at every budget (Table~\ref{tab:pareto}). RAG's fragments \emph{happen} to answer
+a natural-language question because a strong LLM reads around the broken syntax;
+they fail the moment the agent's next tool call tries to parse them. That is the
+axis on which content-type structure pays off.
+
+\paragraph{Budget as a cap, not a target.} A design detail matters here. An
+earlier array selector filled its record quota up to whatever the budget allowed;
+because keyword-stuffed distractors score just above zero, a \emph{larger} budget
+re-admitted them and lowered accuracy as the budget grew---at the 800-token budget
+it fell below RAG top-$k$. We replaced the fill-to-quota rule with a
+\emph{relevance cliff}: keep only records scoring at least half of the best
+match's score. Single-needle queries then keep just the needle; genuine
+multi-record (aggregation) queries keep the whole high-scoring cluster; and
+accuracy no longer decays with budget (95/92/92\% across the three budgets on
+Sonnet, the parity reported above). The budget is a ceiling on what may be kept,
+never a quota that must be filled---the principle that let \tooltrim{} match RAG
+top-$k$ at every budget rather than trailing it at the largest.
 
 \begin{table}[t]
 \centering
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-model & full acc & tooltrim acc & tooltrim tok & retention & tok saved \\
+model & full acc & tt acc & tt tok & retention & tt down & RAG down \\
 \midrule
-Claude Haiku 4.5 & 97\% & \textbf{100\%} & 177 & 103\% & 97.3\% \\
-Claude Sonnet 5  & 69\% & \textbf{90\%}  & 177 & 130\% & 97.3\% \\
+Claude Haiku 4.5 & 97\% & \textbf{100\%} & 139 & 103\% & \textbf{57\%} & 39\% \\
+Claude Sonnet 5  & 73\% & \textbf{92\%}  & 139 & 127\% & \textbf{57\%} & 39\% \\
 \bottomrule
 \end{tabular}
-\caption{Frontier accuracy/token Pareto at a 256-token budget ($n{=}62$,
-real-LLM judge). Compression \emph{raises} Sonnet 5 accuracy from 69\% to 90\%
-while cutting 97\% of tokens. Generated by \texttt{run\_frontier.py}.}
+\caption{Frontier accuracy/token Pareto at a 256-token budget ($n{=}66$,
+real-LLM judge). Compression \emph{raises} Sonnet~5 accuracy from 73\% to 92\%
+while cutting 98\% of tokens. \tooltrim{} and RAG top-$k$ tie on answer accuracy
+($p\geq 0.48$, not shown), but \tooltrim's output stays machine-parseable:
+downstream-extractability (\emph{tt down}) is 57\% vs.\ 39\% for RAG on both
+models. Generated by \texttt{run\_frontier.py}.}
 \label{tab:pareto}
 \end{table}
 
@@ -226,12 +274,12 @@ Removing tool-output noise \emph{raises} accuracy, and not only for small
 models. In cross-model runs, compression to a 128-token budget improved accuracy
 from 13\% to 84\% (Mistral-7B) and 23\% to 73\% (Llama-3.1-8B), with
 non-overlapping Wilson intervals. The frontier run above shows the same effect on
-a capable model with statistical significance: Claude Sonnet 5 rises from 69\% to
-90\% ($p{=}0.002$). Less, on-topic context beats more, noisy context --- the
+a capable model with statistical significance: Claude Sonnet 5 rises from 73\% to
+92\% ($p{=}0.001$). Less, on-topic context beats more, noisy context --- the
 excess is not merely wasted budget, it degrades the answer.
 
 \subsection{Compression as rate-limit admission control}
-Under Groq's per-request token cap, only \textbf{45\%} (28/62) of \emph{raw} tool
+Under Groq's per-request token cap, only \textbf{42\%} (28/66) of \emph{raw} tool
 outputs are admissible---the rest are rejected---versus \textbf{100\%} of
 compressed outputs. A live proxy A/B turned a 14{,}415-token rejected call into a
 26-token accepted one that answered correctly. Compression is thus not only a
@@ -247,19 +295,22 @@ across a realistic agent workload. Because the store is content-addressed,
 replicas share expansions and scale horizontally without coordination.
 
 \section{Limitations}
-The offline judge is lexical and ties \tooltrim{} with RAG top-$k$ by
-construction. The frontier matrix ($n{=}62$) removes that construction and the
-tie \emph{persists} ($p\geq 0.6$ on both models): on \tofb, \tooltrim's
-content-type router does not separate from strong query-aware selection under a
-real LLM judge, even though both dominate truncation and full context. We read
-this as a property of the benchmark --- single planted facts in otherwise
-homogeneous filler reward any query-aware selector equally --- and expect
-separation on outputs where structure matters (deeply nested JSON, interleaved
-logs, multi-fact tables); constructing such a split is future work. \tofb{} uses
-synthetic, deterministically generated outputs for
+On \emph{answer accuracy}, \tooltrim{} and RAG top-$k$ tie: the offline lexical
+judge ties them by construction, and the frontier matrix ($n{=}66$) removes that
+construction yet the tie persists ($p\geq 0.48$ on both models). We read this as a
+property of the metric---single planted facts in homogeneous filler reward any
+query-aware selector equally, and a strong LLM reads around broken syntax to
+answer a natural-language question. The separation we do measure is
+\emph{structural}: because \tooltrim{} preserves content-type validity, its output
+remains machine-parseable and the gold fact stays recoverable from a real parse
+(downstream-extractability 57\% vs.\ 39\% for RAG), which is what an agent's
+\emph{next} tool call actually depends on. Whether that structural advantage
+converts into higher end-to-end agent-task success---where a broken \texttt{json.loads}
+halts the loop rather than merely making one answer harder to read---is the
+natural next evaluation, on an existing agent benchmark rather than fact recovery
+alone. \tofb{} uses synthetic, deterministically generated outputs for
 reproducibility and to avoid PII; a companion track drawing cases from real agent
-traces is future work. End-to-end agent-task success (beyond fact recovery) on an
-existing agent benchmark is the natural next evaluation.
+traces is future work.
 
 \section{Conclusion}
 Tool outputs are the dominant, least-managed token sink in agent loops.
