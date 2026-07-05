@@ -47,6 +47,13 @@ class CompressionStats:
     def saved_ratio(self) -> float:
         return 1 - (self.context_tokens / self.raw_tokens) if self.raw_tokens else 0.0
 
+    def merge(self, other: "CompressionStats") -> None:
+        """Accumulate another env's stats (tau-bench uses a fresh env per task)."""
+        self.tool_calls += other.tool_calls
+        self.compressed += other.compressed
+        self.raw_tokens += other.raw_tokens
+        self.context_tokens += other.context_tokens
+
 
 # --- duck-typed access to Action / EnvResponse -------------------------------
 

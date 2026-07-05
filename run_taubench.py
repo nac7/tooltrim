@@ -48,21 +48,27 @@ def _build_agent(env, *, model: str, provider: str):
 def run_condition(env_name: str, *, method: str, budget: int, task_indices: List[int],
                   agent_model: str, agent_provider: str,
                   user_model: str, user_provider: str, min_tokens: int):
-    """Run one compression condition over ``task_indices``; return (rewards, stats)."""
-    from eval.taubench_adapter import make_compressed_env
+    """Run one compression condition over ``task_indices``; return (rewards, stats).
 
-    env = make_compressed_env(
-        env_name, method=method, budget=budget, min_tokens=min_tokens,
-        user_strategy="llm", user_model=user_model, user_provider=user_provider,
-        task_split="test",
-    )
-    agent = _build_agent(env, model=agent_model, provider=agent_provider)
+    Matches tau-bench's harness: a fresh isolated env per task (so no state leaks
+    between tasks), with compression stats accumulated across them.
+    """
+    from eval.taubench_adapter import CompressionStats, make_compressed_env
+
     rewards: Dict[int, float] = {}
+    total = CompressionStats()
     for i in task_indices:
+        env = make_compressed_env(
+            env_name, method=method, budget=budget, min_tokens=min_tokens,
+            user_strategy="llm", user_model=user_model, user_provider=user_provider,
+            task_split="test",
+        )
+        agent = _build_agent(env, model=agent_model, provider=agent_provider)
         res = agent.solve(env=env, task_index=i)
-        rewards[i] = float(getattr(res, "reward", res.get("reward") if isinstance(res, dict) else 0.0))
+        rewards[i] = float(getattr(res, "reward", 0.0))
+        total.merge(env.stats)
         print(f"  [{method}] task {i}: reward={rewards[i]:.2f}")
-    return rewards, env.stats
+    return rewards, total
 
 
 def build_report(rewards_by_method: Dict[str, Dict[int, float]],

@@ -110,6 +110,10 @@ def test_passthrough_attributes_reach_inner_env():
 
 
 def test_make_compressed_env_raises_without_taubench():
+    import importlib.util
+
+    if importlib.util.find_spec("tau_bench") is not None:
+        pytest.skip("tau_bench installed; the not-installed error path isn't exercised here")
     with pytest.raises(RuntimeError, match="tau-bench not installed"):
         make_compressed_env("retail", method="tooltrim", budget=256)
 
