@@ -40,12 +40,23 @@ def test_optional_baselines_report_availability_honestly():
 
 
 def test_unavailable_baselines_are_skipped_not_run():
-    # A method whose available() is False is dropped by evaluate_methods
-    # rather than executed (which would raise).
-    methods = [get_baseline("full"), get_baseline("rag-embed"), get_baseline("tooltrim")]
+    # A method whose available() is False is dropped by evaluate_methods rather
+    # than executed. Use a synthetic always-unavailable baseline whose compress()
+    # raises if ever called — deterministic and model-free, so the test asserts
+    # the skip contract itself instead of depending on whether an optional model
+    # happens to be installed on this box.
+    class NeverAvailable:
+        name = "never"
+
+        def available(self) -> bool:
+            return False
+
+        def compress(self, text, query, budget):  # pragma: no cover - must never run
+            raise AssertionError("unavailable baseline must not be executed")
+
+    methods = [get_baseline("full"), NeverAvailable(), get_baseline("tooltrim")]
     _, results = evaluate_methods(KeywordModel(), methods, budgets=(256,))
-    if not get_baseline("rag-embed").available():
-        assert "rag-embed" not in results
+    assert "never" not in results
     assert "tooltrim" in results and "full" in results
 
 

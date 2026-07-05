@@ -23,6 +23,8 @@ network):
                         of tooltrim's per-type structure awareness.
   - ``rag-embed``       same, but semantic (needs ``tooltrim[embeddings]``).
   - ``llmlingua-2``     Microsoft LLMLingua-2 (needs ``pip install llmlingua``).
+  - ``llm-summary``     ask a real LLM to summarize the output to the budget (the
+                        "why not just summarize?" baseline; needs an API key).
   - ``tooltrim``        the real thing (content-type router + relevance).
 
 Optional baselines advertise availability via ``available()`` so a run can skip
@@ -181,23 +183,42 @@ class RagEmbed:
     def __init__(self, chunk_size: int = 40, overlap: int = 8, model: Optional[str] = None):
         self.chunk_size = chunk_size
         self.overlap = overlap
+        self._model = model
         self._scorer = None
-        # EmbeddingScorer imports from tooltrim regardless, but it loads the
-        # actual model lazily — so probe the real dependency, not just the class.
+        self._probed = False  # has _probe() run yet?
+
+    def _probe(self):
+        """Build the embedding scorer once, caching success/failure.
+
+        Constructing a sentence-transformers model is the expensive part, so we
+        defer it out of ``__init__`` — merely listing or naming this baseline no
+        longer loads a model. ``available()`` still does the honest *deep* check
+        (dependency importable AND model constructible) on first call, so it
+        never false-positives into a mid-run crash; it just pays for it lazily.
+        """
+        if self._probed:
+            return
+        self._probed = True
         import importlib.util
 
+        # EmbeddingScorer imports from tooltrim regardless, but it loads the
+        # actual model lazily — so probe the real dependency, not just the class.
         if importlib.util.find_spec("sentence_transformers") is not None:
             try:
                 from tooltrim import EmbeddingScorer  # type: ignore
 
-                self._scorer = EmbeddingScorer(model=model) if model else EmbeddingScorer()
+                self._scorer = (
+                    EmbeddingScorer(model=self._model) if self._model else EmbeddingScorer()
+                )
             except Exception:
                 self._scorer = None
 
     def available(self) -> bool:
+        self._probe()
         return self._scorer is not None
 
     def compress(self, text: str, query: Optional[str], budget: int) -> str:
+        self._probe()
         if self._scorer is None:
             raise RuntimeError("rag-embed unavailable: install tooltrim[embeddings]")
         if count_tokens(text) <= budget:
@@ -220,21 +241,35 @@ class LLMLingua2:
     def __init__(self, model: str = "microsoft/llmlingua-2-xlm-roberta-large-meetingbank",
                  device_map: str = "cpu"):
         self._model = model
+        self._device_map = device_map
         self._compressor = None
+        self._probed = False  # has _probe() run yet?
+
+    def _probe(self):
+        """Load the LLMLingua-2 compressor once, caching success/failure.
+
+        Deferred out of ``__init__`` so naming/listing this baseline is cheap;
+        the (large) model only loads on first ``available()`` or ``compress()``.
+        """
+        if self._probed:
+            return
+        self._probed = True
         try:
             from llmlingua import PromptCompressor  # type: ignore
 
             # Default to CPU so the baseline is runnable on machines without a
             # CUDA GPU; callers with a GPU can pass device_map="cuda".
             self._compressor = PromptCompressor(
-                model_name=model, use_llmlingua2=True, device_map=device_map)
+                model_name=self._model, use_llmlingua2=True, device_map=self._device_map)
         except Exception:
             self._compressor = None
 
     def available(self) -> bool:
+        self._probe()
         return self._compressor is not None
 
     def compress(self, text: str, query: Optional[str], budget: int) -> str:
+        self._probe()
         if self._compressor is None:
             raise RuntimeError("llmlingua-2 unavailable: pip install llmlingua")
         if count_tokens(text) <= budget:
@@ -242,6 +277,137 @@ class LLMLingua2:
         out = self._compressor.compress_prompt(
             text, target_token=budget, question=query or "")
         return out.get("compressed_prompt", text)
+
+
+class LLMSummary:
+    """Ask a real LLM to summarize the tool output to the token budget.
+
+    This is the "why not just summarize with a cheap model?" baseline every
+    reviewer asks for. It wraps the library's :class:`~tooltrim.LLMDistiller`
+    with a real completion function and a disk cache (so reruns never re-spend
+    tokens). The point of the comparison is not answer-recall alone but
+    *downstream-extractability*: a fluent LLM summary of a JSON payload is prose,
+    so it no longer parses as JSON — exactly the structural property tooltrim
+    preserves and a summarizer discards.
+
+    Providers: ``claude`` (ANTHROPIC_API_KEY), ``openai`` (OPENAI_API_KEY),
+    ``groq`` (GROQ_API_KEY). Availability is a cheap env-var check; the client is
+    built lazily on first use.
+    """
+
+    name = "llm-summary"
+
+    _KEY_ENV = {
+        "claude": "ANTHROPIC_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
+    }
+
+    def __init__(self, provider: str = "claude", model_id: Optional[str] = None,
+                 cache_path: str = ".cache/llm_summary.json"):
+        self.provider = provider.lower()
+        self.model_id = model_id
+        self.cache_path = cache_path
+        self._complete = None
+        self._probed = False
+        self._cache: Optional[dict] = None
+
+    def available(self) -> bool:
+        import os
+
+        env = self._KEY_ENV.get(self.provider)
+        return bool(env and os.environ.get(env))
+
+    def _load_cache(self) -> dict:
+        if self._cache is None:
+            import json
+            import os
+
+            self._cache = {}
+            if os.path.exists(self.cache_path):
+                try:
+                    with open(self.cache_path, "r", encoding="utf-8") as f:
+                        self._cache = json.load(f)
+                except Exception:
+                    self._cache = {}
+        return self._cache
+
+    def _flush_cache(self) -> None:
+        import json
+        import os
+
+        os.makedirs(os.path.dirname(os.path.abspath(self.cache_path)), exist_ok=True)
+        tmp = self.cache_path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(self._cache, f)
+        os.replace(tmp, self.cache_path)
+
+    def _build_complete(self):
+        """Construct a ``complete(prompt)->str`` for the chosen provider (lazy)."""
+        if self._probed:
+            return self._complete
+        self._probed = True
+        if not self.available():
+            return None
+        try:
+            if self.provider == "claude":
+                import anthropic
+
+                client = anthropic.Anthropic()
+                model = self.model_id or "claude-haiku-4-5"
+
+                def complete(prompt: str) -> str:
+                    resp = client.messages.create(
+                        model=model, max_tokens=1024,
+                        messages=[{"role": "user", "content": prompt}])
+                    return "".join(b.text for b in resp.content if b.type == "text")
+            else:
+                import os
+
+                from openai import OpenAI
+
+                base_url = ("https://api.groq.com/openai/v1"
+                            if self.provider == "groq" else None)
+                client = OpenAI(base_url=base_url,
+                                api_key=os.environ.get(self._KEY_ENV[self.provider], ""))
+                model = self.model_id or (
+                    "llama-3.3-70b-versatile" if self.provider == "groq" else "gpt-4o-mini")
+
+                def complete(prompt: str) -> str:
+                    resp = client.chat.completions.create(
+                        model=model, max_tokens=1024,
+                        messages=[{"role": "user", "content": prompt}])
+                    return resp.choices[0].message.content or ""
+
+            self._complete = complete
+        except Exception:
+            self._complete = None
+        return self._complete
+
+    def compress(self, text: str, query: Optional[str], budget: int) -> str:
+        if count_tokens(text) <= budget:
+            return text
+        import hashlib
+
+        cache = self._load_cache()
+        h = hashlib.sha1()
+        h.update(f"{self.provider}:{self.model_id}\x00{budget}\x00{query}\x00{text}"
+                 .encode("utf-8", "replace"))
+        key = h.hexdigest()
+        if key in cache:
+            return cache[key]
+
+        complete = self._build_complete()
+        if complete is None:
+            raise RuntimeError(
+                f"llm-summary unavailable: set {self._KEY_ENV.get(self.provider)}")
+        from tooltrim import LLMDistiller
+
+        out = LLMDistiller(complete, max_tokens=budget).compress(
+            text, query=query, max_tokens=budget)
+        cache[key] = out
+        self._flush_cache()
+        return out
 
 
 class Tooltrim:
@@ -273,6 +439,7 @@ _REGISTRY = {
     "rag-topk": RagTopK,
     "rag-embed": RagEmbed,
     "llmlingua-2": LLMLingua2,
+    "llm-summary": LLMSummary,
     "tooltrim": Tooltrim,
 }
 

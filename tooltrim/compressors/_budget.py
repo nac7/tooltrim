@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import List, Sequence
 
+from .._config import neighbor_override
 from ..relevance import score_chunks
 from ..tokens import count_tokens
 
@@ -68,6 +69,11 @@ def fit_chunks(
     chunks = list(chunks)
     if not chunks:
         return ""
+
+    # An ablation can force the neighbor window off (or wider) for the whole run.
+    override = neighbor_override()
+    if override is not None:
+        neighbor = override
 
     scores = score_chunks(chunks, query or "")
     has_signal = any(s > 0 for s in scores)

@@ -1,0 +1,38 @@
+name: leaderboard
+
+# Gate for TOFB leaderboard submissions: every PR that touches results.json must
+# pass the schema + significance-evidence checks in validate.py before it merges,
+# so the published standings can never contain malformed or unbacked numbers.
+
+on:
+  push:
+    paths:
+      - 'leaderboard/**'
+      - '.github/workflows/leaderboard.yml'
+  pull_request:
+    paths:
+      - 'leaderboard/**'
+      - '.github/workflows/leaderboard.yml'
+  workflow_dispatch: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate results.json
+        run: python leaderboard/validate.py
+
+      - name: Check LEADERBOARD.md is in sync
+        run: |
+          python -c "import json,sys; sys.path.insert(0,'leaderboard'); import validate; \
+            print(validate.render(json.load(open('leaderboard/results.json',encoding='utf-8'))))" > /tmp/rendered.md
+          # Compare ignoring trailing whitespace/newline differences.
+          if ! diff <(sed -e 's/[[:space:]]*$//' /tmp/rendered.md) \
+                    <(sed -e 's/[[:space:]]*$//' leaderboard/LEADERBOARD.md) >/dev/null; then
+            echo "::error::LEADERBOARD.md is stale. Run: python leaderboard/validate.py --render"
+            exit 1
+          fi

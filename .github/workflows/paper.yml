@@ -1,0 +1,40 @@
+name: paper
+
+# Compiles paper/tooltrim.tex in a full TeX Live container so the arXiv-bound
+# source is verified to build without a local pdflatex install. Fails the run on
+# any LaTeX/BibTeX error and uploads the compiled PDF as a downloadable artifact.
+# arXiv compiles from source, so a green run here is the pre-submission gate.
+
+on:
+  push:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+  pull_request:
+    paths:
+      - 'paper/**'
+      - '.github/workflows/paper.yml'
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile tooltrim.tex (latexmk -> pdflatex + bibtex)
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: tooltrim.tex
+          working_directory: paper
+          latexmk_use_xelatex: false
+          # -halt-on-error surfaces the first real error instead of hanging;
+          # latexmk runs the pdflatex/bibtex/pdflatex/pdflatex sequence for us.
+          args: -pdf -halt-on-error -interaction=nonstopmode -file-line-error
+
+      - name: Upload compiled PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: tooltrim-pdf
+          path: paper/tooltrim.pdf
+          if-no-files-found: error

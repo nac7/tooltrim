@@ -74,6 +74,13 @@ def _csv_table(text: str):
     s = text.strip()
     if not s or "\n" not in s:
         return None
+    # Drop `#`-prefixed comment lines before parsing — the standard CSV comment
+    # convention (pandas `read_csv(comment='#')`), which is how compressors annotate
+    # an omission (`# (+N more rows)`) without breaking a code consumer. Symmetric
+    # with the trailing-footer tolerance in `_load_json_whole`.
+    s = "\n".join(ln for ln in s.splitlines() if not ln.lstrip().startswith("#"))
+    if "\n" not in s:
+        return None
     reader = csv.reader(io.StringIO(s))
     try:
         rows = [r for r in reader if r]

@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from typing import Any, List
 
+from .._config import relevance_floor_override
 from ..relevance import score_chunks
 from ..tokens import count_tokens
 from ._budget import fit_chunks
@@ -45,7 +46,12 @@ def _sample_indices(items: List[Any], k: int, query: str | None) -> List[int]:
         positive = [i for i in range(len(items)) if scores[i] > 0]
         if positive:
             positive.sort(key=lambda i: scores[i], reverse=True)
-            floor = scores[positive[0]] * _RELEVANCE_FLOOR
+            # An ablation can lower the cliff to 0 (fill-to-k quota, the pre-cliff
+            # behavior) to isolate the relevance-cliff's contribution.
+            floor_frac = relevance_floor_override()
+            if floor_frac is None:
+                floor_frac = _RELEVANCE_FLOOR
+            floor = scores[positive[0]] * floor_frac
             kept = [i for i in positive if scores[i] >= floor]
             return sorted(kept[:k])
     if len(items) <= k:
