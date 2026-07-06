@@ -4,6 +4,18 @@ All notable changes to tooltrim are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **JSON compressor no longer collapses under a tight budget.** For a deeply
+  nested object (e.g. a retail order) whose smallest sampled form still exceeded
+  the budget, the compressor cliffed to the text fallback, which splits on commas
+  and could drop top-level scalar fields an agent depends on (e.g. `status`),
+  emitting invalid JSON — as little as ~21 tokens. Two tighter sampling rungs
+  now let a tight budget land on still-valid, structure-preserving JSON that
+  retains those scalars. Purely additive: only affects cases that previously hit
+  the broken fallback.
+
 ## [0.2.1] — 2026-07-04
 
 First PyPI release since 0.1.0, collecting a large amount of work that had

@@ -97,9 +97,16 @@ def compress(text: str, query: str | None, max_tokens: int) -> str:
         # Not actually parseable JSON: treat as text.
         return fit_chunks([p for p in text.split("\n") if p.strip()], query, max_tokens)
 
-    # Progressively tighter sampling until it fits the budget.
+    # Progressively tighter sampling until it fits the budget. The last few rungs
+    # (shallow max_depth, short strings) exist so a *tight* budget still lands on
+    # structure-preserving, still-valid JSON — keeping top-level scalar fields
+    # like "status" that a downstream agent needs — instead of cliffing to the
+    # text fallback below, which shatters the object on commas and can drop those
+    # very fields. See the retail multi-step benchmark: at budget 128 the object
+    # previously collapsed to just the id fields.
     for max_list_items, max_str_len, max_depth in (
         (8, 200, 6), (5, 120, 5), (3, 80, 4), (2, 50, 3), (1, 30, 3),
+        (2, 20, 2), (1, 20, 2),
     ):
         pruned = _prune(data, 0, max_list_items=max_list_items,
                         max_str_len=max_str_len, max_depth=max_depth, query=query)

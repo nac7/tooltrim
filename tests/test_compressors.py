@@ -50,6 +50,34 @@ def test_json_aggregation_keeps_the_whole_relevant_cluster():
         assert str(oid) in out, f"dropped a relevant record {oid}"
 
 
+def test_json_tight_budget_on_nested_object_stays_valid_and_keeps_scalars():
+    # Regression: a deeply-nested single object (e.g. a tau-bench retail order)
+    # at a tight budget must degrade to still-valid JSON that keeps top-level
+    # scalar fields the agent needs (like "status"), NOT cliff to the text
+    # fallback that shatters the object on commas and drops those fields.
+    # Previously this collapsed to ~21 tokens of just the id fields.
+    order = {
+        "order_id": "#W2611340", "user_id": "james_li_5688",
+        "address": {"address1": "215 River Road", "city": "New York",
+                    "state": "NY", "zip": "10083", "country": "USA"},
+        "items": [{"name": "Water Bottle", "product_id": "8310926033",
+                   "price": 47.84, "options": {"capacity": "1000ml", "color": "blue"}},
+                  {"name": "Office Chair", "product_id": "4794339885",
+                   "price": 488.81, "options": {"material": "fabric", "color": "black"}}],
+        "status": "processed",
+        "payment_history": [{"transaction_type": "payment", "amount": 536.65}],
+    }
+    out = json_.compress(json.dumps(order), query="cancel pending order status",
+                         max_tokens=128)
+    assert count_tokens(out) <= 128
+    # Still parses as JSON (the fallback would have shattered it):
+    json.loads(out)
+    # Keeps the fields an agent gates decisions on, not just the ids:
+    assert '"status"' in out and "processed" in out
+    # And actually fills a reasonable share of the budget (no 21-token collapse):
+    assert count_tokens(out) >= 64
+
+
 def test_html_extracts_text_drops_script_style():
     page = (
         "<html><head><style>.a{color:red}</style>"
