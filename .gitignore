@@ -34,3 +34,13 @@ PLAN.md
 
 # launch drafts (private — not for the public repo)
 launch/
+
+# tau-bench paper RESULTS (private — for me only; the harness code IS public).
+# Keep run outputs local; other benchmarks/*.md artifacts stay tracked/public.
+# Patterns are broad on purpose: any TAUBENCH*.md table and any taubench_raw*
+# results dir (incl. confirmation/sweep variants) stays local.
+benchmarks/TAUBENCH*.md
+benchmarks/taubench_raw*/
+# every tau-bench run/trace/pilot output dir is a private result; .md tables above stay tracked.
+benchmarks/taubench_*/
+benchmarks/*.log

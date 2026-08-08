@@ -120,6 +120,31 @@ tooltrim's content-type structure advantage surfaces with a real-LLM judge on
 structured output. Details, caveats, and the full grid:
 [`benchmarks/BASELINES.md`](benchmarks/BASELINES.md).
 
+### End-to-end: does it preserve *task success*? (tau-bench, multi-step)
+
+Single-turn faithfulness isn't the whole story — in a real agent loop a
+compressor can drop a field the agent only needs three turns later.
+[`run_taubench.py`](run_taubench.py) measures that directly: it wraps
+[tau-bench](https://github.com/sierra-research/tau-bench)'s own environment so
+**every tool observation is compressed before it re-enters the agent's context**,
+while tau-bench's reward function, LLM user simulator, and agent stay untouched.
+A compressor that shreds an output the agent needs later shows up as *lower task
+success* — the outcome metric, not a proxy.
+
+The harness reports task success with **Wilson 95% CIs** over all (task, trial)
+observations and a paired **McNemar** test vs tooltrim, sweeps multiple token
+budgets to trace the accuracy-vs-budget curve, and emits a **reproducibility
+manifest** (pinned tau-bench commit, resolved model snapshot, seeds) alongside
+raw per-task JSON so every number is re-derivable offline without re-spending on
+the API. It runs against any litellm-supported model for both the agent and the
+user simulator.
+
+**Status: harness implemented and under pilot** on tau-bench `retail` with
+gpt-4o-mini; results land in [`benchmarks/TAUBENCH.md`](benchmarks/TAUBENCH.md).
+One design note surfaced by the pilot: retail's native tool outputs are modest
+(~130–650 tokens), so runs use a tight budget (≈128 tokens) where compression
+actually engages rather than passing through.
+
 ## Install
 
 ```bash
@@ -435,11 +460,14 @@ both **OpenAI and Anthropic** wire formats with Prometheus **/metrics**,
 **LangChain**, **LlamaIndex**, and **OpenAI-Agents** adapters, an **MCP**
 compressing gateway, pluggable **File/Redis/S3 expand-stores** for horizontal
 scale, optional **embedding-based relevance**, **streaming** compression for
-outputs too big to hold in memory, a `tooltrim` **CLI**, and citable run
+outputs too big to hold in memory, a `tooltrim` **CLI**, a **multi-step
+task-success harness** that compresses tool outputs inside tau-bench's own agent
+loop (in-loop, McNemar vs baselines, reproducibility manifest), and citable run
 artifacts under [`benchmarks/`](benchmarks/). Published on
 [PyPI](https://pypi.org/project/tooltrim/).
 
-Roadmap: frontier-model faithfulness runs, a tool-output faithfulness benchmark
-release, and native streaming passthrough in the proxy.
+Roadmap: frontier-model faithfulness runs, the scaled tau-bench task-success
+sweep (multi-budget, multi-trial) and its benchmark release, and native
+streaming passthrough in the proxy.
 
 Contributions and benchmark cases welcome. MIT licensed.

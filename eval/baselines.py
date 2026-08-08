@@ -428,6 +428,92 @@ class Tooltrim:
         return True
 
 
+class TooltrimExpand:
+    """tooltrim with its recovery path *enabled*: compressed outputs carry a ref
+    footer and the agent is handed an ``expand_tool_output`` tool to pull back the
+    full content on demand.
+
+    This is tooltrim's actual design — aggressive compression made safe by
+    expand-on-demand — which the pure ``tooltrim`` baseline (``store=None``, no
+    footer, no tool) deliberately switches off to isolate lossy compression. The
+    naive baselines (truncate/rag) *cannot* offer this: they discard the content,
+    so there is nothing to expand. Wiring it here is what lets the tau-bench run
+    measure recoverable vs. irrecoverable compression rather than lossy-vs-lossy.
+
+    The env adapter checks for ``expand_tool_spec``/``handle_expand`` (duck-typed)
+    to advertise the tool and route calls back here. Each instance owns its own
+    store, so refs never leak across tasks (tau-bench uses a fresh env per task).
+    """
+
+    name = "tooltrim-expand"
+
+    # A directive footer, not just an FYI. The pilot showed the agent almost
+    # never invoked recovery (~0.1 calls/episode), so the mechanism was barely
+    # exercised. This nudges it in-observation — where the model is actually
+    # looking — to consult the ref before acting when a needed field is missing.
+    _FOOTER = ("\n\n[tooltrim: {saved} tokens omitted from this output "
+               "(ref={ref}). If a detail you need — an id, amount, list item, or "
+               "status — is not shown above, call expand_tool_output(ref={ref}) "
+               "to read the full output before you answer or act.]")
+
+    def __init__(self, page_chars: int = 8000, scorer=None):
+        from tooltrim.store import OutputStore
+
+        self.page_chars = page_chars
+        self._tc = ToolCompressor(max_tokens=512, add_footer=True,
+                                  store=OutputStore(), scorer=scorer,
+                                  footer_template=self._FOOTER)
+
+    @property
+    def expand_tool_name(self) -> str:
+        return self._tc.EXPAND_TOOL_NAME
+
+    def compress(self, text: str, query: Optional[str], budget: int) -> str:
+        return self._tc.compress(text, query=query, max_tokens=budget).text
+
+    def expand_tool_spec(self, style: str = "openai") -> dict:
+        return self._tc.expand_tool_spec(style=style)
+
+    def handle_expand(self, ref: str, *, start: int = 0,
+                      length: Optional[int] = None) -> str:
+        return self._tc.handle_expand(ref, start=start, length=length,
+                                      page_chars=self.page_chars)
+
+    def available(self) -> bool:
+        return True
+
+
+class AblatedTooltrim:
+    """Shipped tooltrim with the relevance cliff and/or neighbor window overridden.
+
+    Confirming ablation for the retail tau-bench negative result: the shipped
+    cliff (relevance_floor=0.5) refuses to pad the budget, so at a *larger* budget
+    it can leave the record the agent needs unselected (a "don't-pad" under-fill).
+    Lowering the floor to 0.0 restores fill-to-k (keep the top-k relevance-positive
+    records, backfilling the budget); widening ``neighbor`` restores more
+    surrounding context on the text path. If flipping these knobs recovers the
+    tasks shipped tooltrim lost, the diagnosis is confirmed and the fix direction
+    (hybrid retention) is validated. Uses the same context-scoped overrides as the
+    component ablation ladder, applied *inside* ``compress`` so it is thread-safe.
+    """
+
+    def __init__(self, name: str, *, relevance_floor: float, neighbor: int):
+        self.name = name
+        self.relevance_floor = relevance_floor
+        self.neighbor = neighbor
+
+    def compress(self, text: str, query: Optional[str], budget: int) -> str:
+        from tooltrim._config import using_config
+
+        tc = ToolCompressor(max_tokens=budget, add_footer=False, store=None)
+        with using_config(neighbor=self.neighbor,
+                          relevance_floor=self.relevance_floor):
+            return tc.compress(text, query=query).text
+
+    def available(self) -> bool:
+        return True
+
+
 # Names of the always-available offline baselines, in a sensible report order.
 DEFAULT_BASELINE_NAMES = (
     "full", "truncate-head", "truncate-tail", "rag-topk", "tooltrim")
@@ -441,6 +527,12 @@ _REGISTRY = {
     "llmlingua-2": LLMLingua2,
     "llm-summary": LLMSummary,
     "tooltrim": Tooltrim,
+    "tooltrim-expand": TooltrimExpand,
+    # Confirming-ablation variants (floor=0 restores fill-to-k; wide widens the
+    # neighbor window). Not part of the shipped comparison set.
+    "tt-floor0": lambda: AblatedTooltrim("tt-floor0", relevance_floor=0.0, neighbor=1),
+    "tt-floor0-wide": lambda: AblatedTooltrim(
+        "tt-floor0-wide", relevance_floor=0.0, neighbor=3),
 }
 
 

@@ -163,10 +163,14 @@ class ToolCompressor:
         tool), or "raw" (name/description/schema).
         """
         description = (
-            "Retrieve the full, uncompressed output behind a tooltrim reference "
-            "(shown in compressed results as 'full output ref=XXXX'). Call this "
-            "when the compressed extract is missing a detail you need. Returns a "
-            "page of characters; use start/length to read more."
+            "Retrieve the full, uncompressed tool output behind a tooltrim "
+            "reference (shown in a compressed result's footer as ref=XXXX). A "
+            "compressed observation may have omitted fields you need — ids, "
+            "amounts, individual list items, statuses. IMPORTANT: before you "
+            "answer the user or take an action that depends on a compressed "
+            "result, if any detail you need is not clearly present in it, call "
+            "this tool with that ref to read the full output first. Returns a "
+            "page of characters; use start/length to page through more."
         )
         schema = {
             "type": "object",
