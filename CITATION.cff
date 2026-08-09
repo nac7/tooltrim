@@ -30,3 +30,12 @@ keywords:
   - tool use
   - retrieval-augmented generation
   - agent evaluation
+preferred-citation:
+  type: article
+  title: "Faithful, Query-Aware Compression of LLM Agent Tool Outputs"
+  authors:
+    - family-names: Lele
+      given-names: Nachiket
+  year: 2026
+  doi: 10.5281/zenodo.21865435
+  url: "https://doi.org/10.5281/zenodo.21865435"
