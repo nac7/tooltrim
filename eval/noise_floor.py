@@ -35,6 +35,11 @@ except Exception:
 DEFAULT_CK = Path(__file__).parent.parent / "benchmarks" / \
     "taubench_multitrial" / "checkpoint.jsonl"
 
+# Tasks used to find the bugs; excluded from any headline claim (see
+# paper/PREREGISTRATION_multitrial.md sec 4.1). Pass --headline to drop them so the
+# supporting equivalence test is scored on the same 35 tasks as the DiD headline.
+DIAGNOSTIC = {0, 6, 7, 15, 35}
+
 
 def load(path: Path) -> dict[tuple[str, int], list[float]]:
     """-> {(method, task): [reward per trial]}"""
@@ -179,9 +184,16 @@ def main() -> int:
     ap.add_argument("--checkpoint", type=Path, default=DEFAULT_CK)
     ap.add_argument("--baseline", default="none")
     ap.add_argument("--candidate", default="tooltrim")
+    ap.add_argument("--headline", action="store_true",
+                    help=f"exclude the {len(DIAGNOSTIC)} diagnostic tasks "
+                         f"{sorted(DIAGNOSTIC)} so the equivalence test is scored "
+                         "on the same 35 headline tasks as the DiD")
     args = ap.parse_args()
 
     data = load(args.checkpoint)
+    if args.headline:
+        data = {(m, t): v for (m, t), v in data.items() if t not in DIAGNOSTIC}
+        print(f"[headline] excluding diagnostic tasks {sorted(DIAGNOSTIC)}")
     n_ep = sum(len(v) for v in data.values())
     methods = sorted({m for m, _ in data})
     print(f"loaded {n_ep} episodes | methods={methods} | "

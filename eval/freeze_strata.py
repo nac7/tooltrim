@@ -22,8 +22,14 @@ CHECKPOINT = Path("benchmarks/taubench_multitrial/checkpoint.jsonl")
 DIAGNOSTIC = {0, 6, 7, 15, 35}  # tasks used to find the bugs; excluded from headline
 
 
-def main() -> None:
-    recs = [json.loads(l) for l in CHECKPOINT.read_text().splitlines() if l.strip()]
+def compute_strata(checkpoint: Path = CHECKPOINT) -> dict:
+    """Derive the frozen exposure strata from the paid baseline checkpoint.
+
+    Single source of truth for the strata: eval.did_analysis imports this so the
+    headline DiD and the pre-registration cannot silently diverge. Returns raw
+    (all-40) strata plus the diagnostic-excluded headline sets.
+    """
+    recs = [json.loads(l) for l in checkpoint.read_text().splitlines() if l.strip()]
     tt = [r for r in recs if r["method"] == "tooltrim"]
     tc, cp = defaultdict(int), defaultdict(int)
     for r in tt:
@@ -39,7 +45,26 @@ def main() -> None:
     low = [t for t in nonzero if exp[t] < med]
     high = [t for t in nonzero if exp[t] >= med]  # tie -> high
 
-    print(f"tooltrim episodes: {len(tt)}")
+    def drop(s):
+        return [t for t in s if t not in DIAGNOSTIC]
+
+    hl_low, hl_high = drop(low), drop(high)
+    return {
+        "episodes": len(tt), "median": med,
+        "placebo": placebo, "low": low, "high": high,
+        "headline_placebo": drop(placebo),          # 19
+        "headline_low": hl_low, "headline_high": hl_high,
+        "affected": hl_low + hl_high,               # 16 (low u high, diagnostics out)
+        "headline": drop(placebo) + hl_low + hl_high,  # 35
+    }
+
+
+def main() -> None:
+    st = compute_strata()
+    placebo, low, high = st["placebo"], st["low"], st["high"]
+    med = st["median"]
+
+    print(f"tooltrim episodes: {st['episodes']}")
     print(f"median exposure among nonzero tasks: {med:.4f}")
     print(f"placebo ({len(placebo)}): {placebo}")
     print(f"low     ({len(low)}): {low}")
