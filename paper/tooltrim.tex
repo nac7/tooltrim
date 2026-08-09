@@ -56,7 +56,21 @@ reaches \textbf{100\%} task success versus \textbf{20\%} for RAG top-$k$ at a
 256-token budget ($\Delta{=}{+}80$pp, paired McNemar $p{=}0.013$)---the
 structural advantage that is invisible to answer-recall converts into a
 significant task-success gap once a broken \texttt{json.loads} halts the agent
-loop. We release \tooltrim{} (PyPI, MIT), the \tofb{} dataset (HuggingFace), and
+loop. Because those wins are scored by real parsing rather than a live model, we
+complement them with a \emph{live, pre-registered} study on the
+\textsc{$\tau$-bench} retail benchmark (\texttt{gpt-4o-mini} as agent and user
+simulator, 40 tasks $\times$ 5 trials). Its methodological core is a
+\emph{placebo-controlled difference-in-differences}: the 19 tasks on which
+\tooltrim{} never fires form a byte-identical control that measures the
+benchmark's own run-to-run stochasticity, which the estimator nets out. We find
+\textbf{no detectable task-success harm} from compression in a real multi-step
+loop (DiD $=-4.0$pp, 95\% cluster-bootstrap CI $[-23.6,+14.6]$---a CI-bounded
+no-harm result, not a formal equivalence certificate), and the placebo control
+reproducibly exposes a large intrinsic noise floor---two trials of the
+\emph{unchanged} system disagree on 25.7\% of task pairs---which we argue makes
+uncontrolled single-trial agentic A/B comparisons uninterpretable and is a
+reusable instrument for evaluating any such intervention. We release \tooltrim{}
+(PyPI, MIT), the \tofb{} dataset (HuggingFace), and
 a reproducible baseline harness comparing \tooltrim{} against truncation, RAG
 top-$k$, and LLMLingua-2.
 \end{abstract}
@@ -101,6 +115,15 @@ parsing and computation over the compressed output rather than an LLM reading
 around broken syntax, on which \tooltrim{} beats RAG top-$k$ by $+80$pp in task
 success ($p{=}0.013$)---turning the structural advantage from a plausible
 argument into a measured, significant result.
+\item A \emph{pre-registered, placebo-controlled} live-agent evaluation on
+\textsc{$\tau$-bench} whose reusable methodological contribution is a
+difference-in-differences estimator anchored on a byte-identical placebo
+stratum. It separates a genuine compression effect from benchmark stochasticity,
+yields a CI-bounded no-detectable-harm result for \tooltrim{} in a real
+multi-step loop, and quantifies a 25.7\% single-trial noise floor that renders
+uncontrolled single-trial agentic benchmarks uninterpretable---an instrument that
+transfers to evaluating any tool-context intervention. Predictions, strata, and
+the analysis are frozen in a pre-registration committed before the run.
 \item Four findings with practical weight: compression as an accuracy aid (even
 for a frontier model), compression as provider rate-limit admission control,
 parity-on-recall but structural separation (machine-parseable output) against RAG
@@ -448,10 +471,10 @@ failed payments---\emph{both} outputs large, both must survive compression for t
 agent to finish), \tooltrim{} completes \textbf{100\%} of episodes at a 98\% token
 reduction, while truncation and content-agnostic RAG selection complete
 \textbf{0\%}: they shred one or both JSON payloads so the agent's next-step
-\texttt{json.loads} fails and the chain breaks (Table~\ref{tab:multistep}). The
-harness exposes adapter seams for \emph{tau-bench} and BFCL; wiring their tasks
-and an LLM tool-calling policy is the path to a fully external multi-step
-evaluation.
+\texttt{json.loads} fails and the chain breaks (Table~\ref{tab:multistep}). We
+exercise the \emph{tau-bench} seam directly in Section~\ref{sec:taubench} with a
+live LLM agent and user simulator; the BFCL seam remains available for further
+external evaluation.
 
 \begin{table}[t]
 \centering
@@ -537,22 +560,30 @@ harder to read, \tooltrim{} beats RAG top-$k$ $+80$pp ($p{=}0.013$), and the
 advantage persists \emph{across a multi-step tool chain}
 (Section~\ref{sec:multistep}): compressing every tool output in a 2-hop loop,
 \tooltrim{} completes 100\% of episodes to truncation's and RAG's 0\%. Two honest
-gaps remain. First, our tasks and tool outputs are synthetic and deterministically
-generated (for reproducibility and to avoid PII). We implement the
-\emph{tau-bench} adapter as an env wrapper that compresses tool observations
-inside tau-bench's own loop---leaving its reward function and LLM user simulator
-untouched, so results stay comparable to the published leaderboard---and running
-it across the task suite with an LLM agent and user simulator is the definitive
-external evaluation, requiring only API budget. Second, a companion track drawing cases from
-real agent traces would close the synthetic-data gap entirely; both are the
-immediate future work.
+gaps remain. First, the offline suites use synthetic, deterministically generated
+tasks and tool outputs (for reproducibility and to avoid PII); the live
+\textsc{$\tau$-bench} evaluation (Section~\ref{sec:taubench}) addresses this with
+an external benchmark and a real LLM agent and user simulator, compressing tool
+observations inside tau-bench's own loop while leaving its reward function
+untouched, so results stay comparable to the published leaderboard. Its own limit
+is statistical power: at 40 tasks the difference-in-differences half-width floors
+near $\pm15$pp, so we report a CI-bounded no-detectable-harm result rather than a
+formal equivalence certificate---closing that gap requires scaling to the full
+retail task suite ($\approx$115 tasks), the between-task (cluster) axis that
+additional trials per task cannot substitute for. Second, a companion track
+drawing cases from real agent traces would close the synthetic-data gap entirely;
+both are the immediate future work.
 
 \section{Conclusion}
 Tool outputs are the dominant, least-managed token sink in agent loops.
 Query-aware, faithful compression preserves---and for small models improves---task
 success while cutting the overwhelming majority of tokens and keeping calls inside
-provider rate limits. We release the library, the \tofb{} benchmark, and a
-reproducible baseline harness so the result is easy to check and build on.
+provider rate limits. In a live, pre-registered \textsc{$\tau$-bench} loop a
+placebo-controlled difference-in-differences finds no detectable task-success
+harm, and the same design exposes a 25.7\% single-trial noise floor that we offer
+as a reusable instrument for evaluating tool-context interventions. We release the
+library, the \tofb{} benchmark, the pre-registration, and a reproducible baseline
+harness so the result is easy to check and build on.
 
 \bibliographystyle{plain}
 \bibliography{references}

@@ -6,6 +6,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-09
+
+Research-grade evaluation release: the compressor gains substantial robustness
+under tight budgets, and the repository now ships the full benchmark harness,
+the paper source, and a pre-registered live-agent study.
+
+### Added
+- **Benchmark & evaluation harness.** Frontier accuracy/token Pareto driver
+  (`run_frontier.py`), end-to-end agent-task suite (`run_agent_tasks.py`),
+  multi-step tool-chain harness, component ablation (`run_ablation.py`), and a
+  `tau-bench` compression adapter + runner (`run_taubench.py`) that compresses
+  tool observations inside tau-bench's own loop, leaving its reward function and
+  LLM user simulator untouched.
+- **Tool-Output Faithfulness Benchmark (TOFB)** export for HuggingFace.
+- **Downstream-extractability metric** — whether a compressed output still parses
+  in code and the gold fact is recoverable from that parse.
+- **Pre-registered multi-trial tau-bench study.** A committed pre-registration
+  (`paper/PREREGISTRATION_multitrial.md`) plus the frozen analysis: the
+  placebo-controlled difference-in-differences headline (`eval/did_analysis.py`),
+  the noise-floor / paired-equivalence estimator (`eval/noise_floor.py`, with
+  `--headline` to score on the non-diagnostic tasks), and reproducible strata
+  derivation (`eval/freeze_strata.py`, exposing `compute_strata()` as the single
+  source of truth shared with the analysis).
+- **Paper source** (`paper/tooltrim.tex`) and reproducible-run notes.
+
 ### Fixed
 - **JSON compressor no longer collapses under a tight budget.** For a deeply
   nested object (e.g. a retail order) whose smallest sampled form still exceeded
@@ -15,6 +40,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   now let a tight budget land on still-valid, structure-preserving JSON that
   retains those scalars. Purely additive: only affects cases that previously hit
   the broken fallback.
+- **Id-keyed record maps and flat lookup maps are no longer gutted.** A dict of
+  records (e.g. tau-bench retail `variants` keyed by item id) had no sampling
+  lever, so a tight budget depth-elided every value wholesale, destroying every
+  `item_id`/`available`/`options` field. Dicts now get the same relevance-based
+  entry sampling arrays already had (keep *k* whole entries + a truncation
+  marker), and large flat `name → id` lookup tables are sampled by relevance
+  rather than positionally.
+- **Elision markers are always emitted.** The incompleteness marker is now
+  reserved before filling the budget, so a compressed catalogue can no longer
+  look complete when records were dropped.
+
+### Changed
+- **Budget is a cap, not a target.** Array selection uses a relevance cliff (keep
+  records scoring at least half the best match) instead of filling the record
+  quota to the budget, so accuracy no longer decays as the budget grows.
 
 ## [0.2.1] — 2026-07-04
 
