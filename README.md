@@ -1,5 +1,7 @@
 # tooltrim
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21865217.svg)](https://doi.org/10.5281/zenodo.21865217)
+
 **Drop-in compression for LLM agent tool outputs.** Shrink bloated tool results
 — fetched web pages, paginated JSON, log dumps, CSV exports, long documents —
 *before* they re-enter your agent's context window. Keep the facts the model

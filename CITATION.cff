@@ -15,6 +15,11 @@ authors:
     given-names: Nachiket
 version: 0.3.0
 date-released: "2026-08-09"
+doi: 10.5281/zenodo.21865217
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21865217
+    description: Archived snapshot of tooltrim 0.3.0
 license: MIT
 repository-code: "https://github.com/nac7/tooltrim"
 url: "https://github.com/nac7/tooltrim"
