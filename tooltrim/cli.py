@@ -122,6 +122,20 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    try:
+        import asyncio
+
+        from .integrations.mcp import run_stdio_server
+    except ImportError:
+        print("Install MCP support:  pip install tooltrim[mcp]", file=sys.stderr)
+        return 1
+    print(f"tooltrim MCP server (budget={args.max_tokens} tok); exposes "
+          f"compress + expand_tool_output over stdio", file=sys.stderr)
+    asyncio.run(run_stdio_server(max_tokens=args.max_tokens))
+    return 0
+
+
 def _cmd_version(args: argparse.Namespace) -> int:
     print(f"tooltrim {__version__}")
     return 0
@@ -171,6 +185,13 @@ def build_parser() -> argparse.ArgumentParser:
     mc.add_argument("command_argv", nargs=argparse.REMAINDER,
                     help="-- then the upstream MCP server command and args")
     mc.set_defaults(func=_cmd_mcp)
+
+    sv = sub.add_parser(
+        "serve",
+        help="run tooltrim itself as an MCP server (compress + expand tools)")
+    sv.add_argument("-m", "--max-tokens", type=int, default=512,
+                    help="token budget per compress call")
+    sv.set_defaults(func=_cmd_serve)
 
     v = sub.add_parser("version", help="print the version")
     v.set_defaults(func=_cmd_version)

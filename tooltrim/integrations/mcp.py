@@ -132,3 +132,108 @@ async def run_stdio_gateway(
             async with stdio_server() as (read, write):
                 await server.run(read, write,
                                  server.create_initialization_options())
+
+
+def build_tool_server(
+    *,
+    max_tokens: int = 512,
+    compressor: Optional[ToolCompressor] = None,
+    name: str = "tooltrim",
+) -> Any:
+    """Build (but don't run) the standalone tooltrim MCP server.
+
+    Returns a configured ``mcp.server.lowlevel.Server`` exposing tooltrim's own
+    capability as two callable tools, with no upstream required:
+
+      - ``compress(text, query=None, max_tokens=None)`` — shrink a bloated tool
+        output / long text to a token budget, keeping what's relevant; the full
+        output stays retrievable via the ref in the result's footer.
+      - ``expand_tool_output(ref, start=0, length=None)`` — pull back the full
+        original output behind a ref.
+
+    Separated from :func:`run_stdio_server` so it can be driven in-memory by tests.
+    """
+    import mcp.types as types
+    from mcp.server.lowlevel import Server
+
+    tc = compressor or ToolCompressor(max_tokens=max_tokens)
+    server = Server(name)
+
+    compress_schema = {
+        "type": "object",
+        "properties": {
+            "text": {"type": "string",
+                     "description": "the tool output / long text to compress"},
+            "query": {"type": "string",
+                      "description": "optional relevance query — keep what's "
+                                     "on-topic for this"},
+            "max_tokens": {"type": "integer",
+                           "description": f"token budget (default {max_tokens})"},
+        },
+        "required": ["text"],
+    }
+
+    @server.list_tools()
+    async def _list_tools():
+        expand = tc.expand_tool_spec(style="raw")
+        return [
+            types.Tool(
+                name="compress",
+                description=(
+                    "Compress a bloated tool output or long text so it fits a "
+                    "token budget while keeping what's relevant to an optional "
+                    "query. Returns a compact extract; the full output stays "
+                    "retrievable via the ref in its footer — call "
+                    "expand_tool_output with that ref to read it back."
+                ),
+                inputSchema=compress_schema,
+            ),
+            types.Tool(
+                name=expand["name"],
+                description=expand["description"],
+                inputSchema=expand["schema"],
+            ),
+        ]
+
+    @server.call_tool()
+    async def _call_tool(tool_name: str, arguments: Optional[dict]):
+        arguments = arguments or {}
+        if tool_name == "compress":
+            res = tc.compress(
+                arguments.get("text", ""),
+                query=arguments.get("query"),
+                max_tokens=arguments.get("max_tokens"),
+            )
+            return [types.TextContent(type="text", text=res.text)]
+        if tool_name == tc.EXPAND_TOOL_NAME:
+            out = tc.handle_expand(
+                arguments.get("ref", ""),
+                start=arguments.get("start", 0) or 0,
+                length=arguments.get("length"),
+            )
+            return [types.TextContent(type="text", text=out)]
+        return [types.TextContent(
+            type="text", text=f"[tooltrim: unknown tool {tool_name!r}]")]
+
+    return server
+
+
+async def run_stdio_server(
+    *,
+    max_tokens: int = 512,
+    compressor: Optional[ToolCompressor] = None,
+    name: str = "tooltrim",
+) -> None:
+    """Run tooltrim itself as a standalone MCP server over stdio.
+
+    Unlike :func:`run_stdio_gateway` (which fronts an *upstream* server), this
+    needs no upstream, so ``uvx tooltrim serve`` is a complete, runnable MCP
+    server. Point any MCP client (Claude Desktop, an IDE, an agent) at it to call
+    tooltrim compression (and expand-on-demand) directly as tools.
+    """
+    from mcp.server.stdio import stdio_server
+
+    server = build_tool_server(
+        max_tokens=max_tokens, compressor=compressor, name=name)
+    async with stdio_server() as (read, write):
+        await server.run(read, write, server.create_initialization_options())

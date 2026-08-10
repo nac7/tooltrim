@@ -3,6 +3,8 @@
 [![Paper DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21865435.svg)](https://doi.org/10.5281/zenodo.21865435)
 [![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21865216.svg)](https://doi.org/10.5281/zenodo.21865216)
 
+<!-- mcp-name: io.github.nac7/tooltrim -->
+
 **Drop-in compression for LLM agent tool outputs.** Shrink bloated tool results
 — fetched web pages, paginated JSON, log dumps, CSV exports, long documents —
 *before* they re-enter your agent's context window. Keep the facts the model
@@ -338,6 +340,24 @@ result = compress_tool_result(result, compressor=tc, query=query)
 ```
 
 See [`examples/08_mcp_gateway.py`](examples/08_mcp_gateway.py).
+
+### 8b. Or expose tooltrim itself as an MCP server
+
+Want compression as a *tool* your agent can call directly — no upstream server to
+front? Run tooltrim as a standalone MCP server. It exposes two tools over stdio:
+`compress(text, query=None, max_tokens=None)` and `expand_tool_output(ref)`.
+
+```bash
+pip install tooltrim[mcp]
+tooltrim serve
+```
+
+It's published to the [MCP Registry](https://registry.modelcontextprotocol.io) as
+`io.github.nac7/tooltrim`, so an MCP-aware client can launch it with no clone:
+
+```bash
+uvx --from tooltrim[mcp] tooltrim serve
+```
 
 ### 9. Or run it as a proxy — zero code changes
 

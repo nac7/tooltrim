@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-08-10
+
+### Added
+- **Standalone MCP server (`tooltrim serve`).** In addition to the compressing
+  *gateway* (which fronts an upstream server), tooltrim can now run as a complete
+  MCP server in its own right — no upstream required — exposing its capability as
+  two stdio tools: `compress(text, query=None, max_tokens=None)` and
+  `expand_tool_output(ref, start=0, length=None)`. New
+  `integrations.mcp.run_stdio_server` / `build_tool_server` (the latter is
+  test-friendly). Published to the MCP Registry as `io.github.nac7/tooltrim`, so
+  an MCP client can launch it with `uvx --from tooltrim[mcp] tooltrim serve`.
+  `mcp` stays an optional extra — the core library remains dependency-free.
+
 ## [0.3.1] — 2026-08-09
 
 ### Fixed
@@ -110,6 +123,7 @@ BM25 query-aware extraction, expand-on-demand content-addressed store,
 `@compressed_tool` decorator, OpenAI-compatible compression proxy (fail-open),
 and a faithfulness evaluation harness with Wilson 95% confidence intervals.
 
+[0.3.2]: https://github.com/nac7/tooltrim/releases/tag/v0.3.2
 [0.3.1]: https://github.com/nac7/tooltrim/releases/tag/v0.3.1
 [0.3.0]: https://github.com/nac7/tooltrim/releases/tag/v0.3.0
 [0.2.1]: https://github.com/nac7/tooltrim/releases/tag/v0.2.1
