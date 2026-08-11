@@ -1,0 +1,23 @@
+# Keep the MCP image lean — the server needs only the package, not eval assets.
+.git
+.github
+.pytest_cache
+.cache
+__pycache__
+*.pyc
+dist
+*.egg-info
+
+# Research / benchmark / paper assets (not needed to run the MCP server)
+benchmarks
+benchmark.py
+compare_runs.py
+eval
+hf_dataset
+leaderboard
+paper
+results
+run_*.py
+save_benchmark.py
+k8s
+launch
