@@ -13,13 +13,19 @@ type: software
 authors:
   - family-names: Lele
     given-names: Nachiket
-version: 0.3.1
-date-released: "2026-08-09"
+version: 0.3.3
+date-released: "2026-08-11"
 doi: 10.5281/zenodo.21865216
 identifiers:
   - type: doi
     value: 10.5281/zenodo.21865216
     description: Concept DOI (always resolves to the latest tooltrim release)
+  - type: doi
+    value: 10.5281/zenodo.21892188
+    description: Archived snapshot of tooltrim 0.3.3
+  - type: doi
+    value: 10.5281/zenodo.21877182
+    description: Archived snapshot of tooltrim 0.3.2
   - type: doi
     value: 10.5281/zenodo.21866534
     description: Archived snapshot of tooltrim 0.3.1
