@@ -6,6 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-08-11
+
+### Fixed
+- **MCP extra now installs a compatible `mcp` version.** `mcp` 2.0 removed the
+  `Server.list_tools()` decorator API that `tooltrim serve` and the compressing
+  gateway rely on, so a fresh `pip install tooltrim[mcp]` began resolving
+  `mcp==2.0.0` and crashing at startup with
+  `AttributeError: 'Server' object has no attribute 'list_tools'`. The `mcp`
+  extra is now pinned to `mcp>=1,<2` until the integration is ported to the
+  2.0 API. No API changes to tooltrim itself.
+
 ## [0.3.2] — 2026-08-10
 
 ### Added

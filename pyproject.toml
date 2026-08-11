@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tooltrim"
-version = "0.3.2"
+version = "0.3.3"
 description = "Drop-in compression for LLM agent tool outputs. Shrink bloated HTML/JSON/log results before they re-enter context — cut tokens, stay on-task, keep full output retrievable."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -33,7 +33,7 @@ tokens = ["tiktoken>=0.5"]
 langchain = ["langchain-core>=0.2"]
 llamaindex = ["llama-index-core>=0.10"]
 openai-agents = ["openai-agents>=0.1"]
-mcp = ["mcp>=1.0"]
+mcp = ["mcp>=1,<2"]  # 2.0 removed the Server.list_tools() decorator API; pin until ported
 embeddings = ["sentence-transformers>=2"]
 redis = ["redis>=4"]
 s3 = ["boto3>=1.26"]

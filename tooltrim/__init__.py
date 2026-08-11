@@ -41,7 +41,7 @@ from .store import BaseStore, FileStore, OutputStore, RedisStore, S3Store
 from .streaming import StreamingCompressor, compress_stream
 from .tokens import count_tokens, using_exact_counts
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 __all__ = [
     "ToolCompressor",
